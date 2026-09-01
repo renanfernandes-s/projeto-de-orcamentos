@@ -1,4 +1,5 @@
 import './style.css';
+import html2pdf from 'html2pdf.js';
 
 // --- SELETORES DO DOM ---
 const providerNameInput = document.getElementById('provider-name');
@@ -18,11 +19,13 @@ const previewItemsList = document.getElementById('preview-items-list');
 
 const itemsContainer = document.getElementById('items-container');
 const btnAddItem = document.getElementById('btn-add-item');
+const btnGeneratePdf = document.getElementById('btn-generate-pdf');
+const btnSendWhatsapp = document.getElementById('btn-send-whatsapp');
 
 // Define a data atual na visualização
 previewDate.textContent = new Date().toLocaleDateString('pt-BR');
 
-// --- ATUALIZAÇÃO EM TEMPO REAL (INPUTS SIMPLES) ---
+// --- ATUALIZAÇÃO EM TEMPO REAL ---
 providerNameInput.addEventListener('input', (e) => {
   previewProviderName.textContent = e.target.value || 'Seu Nome / Empresa';
 });
@@ -69,7 +72,6 @@ function calculateAndRenderItems() {
     const subtotal = qty * price;
     grandTotal += subtotal;
 
-    // Adiciona linha na pré-visualização
     const tr = document.createElement('tr');
     tr.className = 'border-b border-slate-100';
     tr.innerHTML = `
@@ -83,10 +85,8 @@ function calculateAndRenderItems() {
   previewTotal.textContent = `R$ ${grandTotal.toFixed(2).replace('.', ',')}`;
 }
 
-// Escuta mudanças nos inputs de itens existentes
 itemsContainer.addEventListener('input', calculateAndRenderItems);
 
-// Adicionar novo item
 btnAddItem.addEventListener('click', () => {
   const newRow = document.createElement('div');
   newRow.className = 'item-row grid grid-cols-12 gap-2 items-center bg-slate-50 p-2 rounded-lg border border-slate-200';
@@ -97,7 +97,6 @@ btnAddItem.addEventListener('click', () => {
     <button type="button" class="col-span-1 text-red-500 font-bold hover:text-red-700 text-center btn-remove-item">✕</button>
   `;
 
-  // Botão de remover a linha
   newRow.querySelector('.btn-remove-item').addEventListener('click', () => {
     newRow.remove();
     calculateAndRenderItems();
@@ -107,10 +106,45 @@ btnAddItem.addEventListener('click', () => {
   calculateAndRenderItems();
 });
 
-// Configura remoção na primeira linha padrão
 document.querySelectorAll('.btn-remove-item').forEach(btn => {
   btn.addEventListener('click', (e) => {
     e.target.closest('.item-row').remove();
     calculateAndRenderItems();
   });
+});
+
+// --- QUARTA-FEIRA: GERAR E BAIXAR PDF ---
+btnGeneratePdf.addEventListener('click', () => {
+  const element = document.getElementById('pdf-template');
+  const clientName = clientNameInput.value.trim() || 'Cliente';
+
+  const options = {
+    margin: 8,
+    filename: `Orcamento_${clientName.replace(/\s+/g, '_')}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+
+  html2pdf().set(options).from(element).save();
+});
+
+// --- QUARTA-FEIRA: ENVIO DIRETO PARA WHATSAPP ---
+btnSendWhatsapp.addEventListener('click', () => {
+  const rawPhone = clientPhoneInput.value.replace(/\D/g, '');
+  const clientName = clientNameInput.value.trim() || 'Cliente';
+  const providerName = providerNameInput.value.trim() || 'Sua Empresa';
+  const total = previewTotal.textContent;
+
+  if (!rawPhone) {
+    alert('Por favor, informe o WhatsApp do cliente para enviar a mensagem.');
+    return;
+  }
+
+  const message = `Olá, *${clientName}*! Tudo bem?\n\n` +
+    `Aqui é da *${providerName}*. Seu orçamento foi gerado com sucesso no valor total de *${total}*.\n\n` +
+    `Estou à disposição para tirarmos dúvidas e confirmarmos o serviço!`;
+
+  const encodedMessage = encodeURIComponent(message);
+  window.open(`https://wa.me/55${rawPhone}?text=${encodedMessage}`, '_blank');
 });
