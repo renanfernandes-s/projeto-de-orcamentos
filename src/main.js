@@ -1,5 +1,6 @@
 import './style.css';
 import html2pdf from 'html2pdf.js';
+import { supabase } from './supabase.js';
 
 // --- SELETORES DO DOM ---
 const providerNameInput = document.getElementById('provider-name');
@@ -22,8 +23,49 @@ const btnAddItem = document.getElementById('btn-add-item');
 const btnGeneratePdf = document.getElementById('btn-generate-pdf');
 const btnSendWhatsapp = document.getElementById('btn-send-whatsapp');
 
+// Seletores do Modal Pix e Contador
+const usedCountEl = document.getElementById('used-count');
+const pixModal = document.getElementById('pix-modal');
+const btnCloseModal = document.getElementById('btn-close-modal');
+const MAX_FREE_LIMIT = 3;
+
 // Define a data atual na visualização
 previewDate.textContent = new Date().toLocaleDateString('pt-BR');
+
+// --- IDENTIFICADOR ÚNICO DO DISPOSITIVO ---
+let deviceId = localStorage.getItem('orcafacil_device_id');
+if (!deviceId) {
+  deviceId = crypto.randomUUID();
+  localStorage.setItem('orcafacil_device_id', deviceId);
+}
+
+// --- VERIFICAÇÃO DE LIMITE NO SUPABASE ---
+async function checkUsageLimit() {
+  const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+
+  const { count, error } = await supabase
+    .from('budgets')
+    .select('*', { count: 'exact', head: true })
+    .eq('device_id', deviceId)
+    .gte('created_at', startOfMonth);
+
+  if (error) {
+    console.error('Erro ao consultar Supabase:', error);
+    return 0;
+  }
+
+  const totalUsed = count || 0;
+  if (usedCountEl) usedCountEl.textContent = totalUsed;
+  return totalUsed;
+}
+
+// Inicializa contador na tela ao carregar a página
+checkUsageLimit();
+
+// Evento de fechar o modal
+btnCloseModal?.addEventListener('click', () => {
+  pixModal.classList.add('hidden');
+});
 
 // --- ATUALIZAÇÃO EM TEMPO REAL ---
 providerNameInput.addEventListener('input', (e) => {
@@ -113,8 +155,18 @@ document.querySelectorAll('.btn-remove-item').forEach(btn => {
   });
 });
 
-// --- QUARTA-FEIRA: GERAR E BAIXAR PDF ---
-btnGeneratePdf.addEventListener('click', () => {
+// --- GERAR PDF COM VERIFICAÇÃO DE LIMITE ---
+btnGeneratePdf.addEventListener('click', async () => {
+  // 1. Verifica uso atual no Supabase
+  const currentUsage = await checkUsageLimit();
+
+  // 2. Se atingiu ou passou do limite (3), exibe o Modal Pix e cancela o download
+  if (currentUsage >= MAX_FREE_LIMIT) {
+    pixModal.classList.remove('hidden');
+    return;
+  }
+
+  // 3. Se estiver dentro do limite, gera e baixa o PDF
   const element = document.getElementById('pdf-template');
   const clientName = clientNameInput.value.trim() || 'Cliente';
 
@@ -127,9 +179,25 @@ btnGeneratePdf.addEventListener('click', () => {
   };
 
   html2pdf().set(options).from(element).save();
+
+  // 4. Registra o uso no banco de dados do Supabase
+  const totalText = previewTotal.textContent.replace('R$', '').replace('.', '').replace(',', '.').trim();
+  const grandTotal = parseFloat(totalText) || 0;
+
+  await supabase.from('budgets').insert([
+    {
+      provider_name: providerNameInput.value || 'Não informado',
+      client_name: clientNameInput.value || 'Não informado',
+      total_amount: grandTotal,
+      device_id: deviceId
+    }
+  ]);
+
+  // 5. Atualiza o contador no cabeçalho
+  checkUsageLimit();
 });
 
-// --- QUARTA-FEIRA: ENVIO DIRETO PARA WHATSAPP ---
+// --- ENVIO DIRETO PARA WHATSAPP ---
 btnSendWhatsapp.addEventListener('click', () => {
   const rawPhone = clientPhoneInput.value.replace(/\D/g, '');
   const clientName = clientNameInput.value.trim() || 'Cliente';
