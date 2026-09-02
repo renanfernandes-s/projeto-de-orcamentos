@@ -1,3 +1,16 @@
+# Arquivos de variáveis de ambiente e chaves sensíveis
+.env
+.env.*
+!.env.example
+
+# Dependências
+node_modules/
+
+# Builds e Saídas
+dist/
+dist-ssr/
+*.local
+
 # Logs
 logs
 *.log
@@ -7,12 +20,7 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
+# Editor e Sistema Operacional
 .vscode/*
 !.vscode/extensions.json
 .idea

@@ -1,6 +1,7 @@
 import './style.css';
 import html2pdf from 'html2pdf.js';
 import { supabase } from './supabase.js';
+import { generatePixPayment } from './asaas.js';
 
 // --- SELETORES DO DOM ---
 const providerNameInput = document.getElementById('provider-name');
@@ -23,14 +24,21 @@ const btnAddItem = document.getElementById('btn-add-item');
 const btnGeneratePdf = document.getElementById('btn-generate-pdf');
 const btnSendWhatsapp = document.getElementById('btn-send-whatsapp');
 
-// Seletores do Modal Pix e Contador
+// Seletores do Modal Pix e Limite
 const usedCountEl = document.getElementById('used-count');
 const pixModal = document.getElementById('pix-modal');
 const btnCloseModal = document.getElementById('btn-close-modal');
+const btnCopyPix = document.getElementById('btn-copy-pix');
+const qrCodeBox = document.getElementById('qr-code-box');
 const MAX_FREE_LIMIT = 3;
 
+// Guardar o código Pix Copia e Cola retornado pelo Asaas
+let currentPixCode = "";
+
 // Define a data atual na visualização
-previewDate.textContent = new Date().toLocaleDateString('pt-BR');
+if (previewDate) {
+  previewDate.textContent = new Date().toLocaleDateString('pt-BR');
+}
 
 // --- IDENTIFICADOR ÚNICO DO DISPOSITIVO ---
 let deviceId = localStorage.getItem('orcafacil_device_id');
@@ -62,29 +70,70 @@ async function checkUsageLimit() {
 // Inicializa contador na tela ao carregar a página
 checkUsageLimit();
 
-// Evento de fechar o modal
+// Fechar o modal
 btnCloseModal?.addEventListener('click', () => {
-  pixModal.classList.add('hidden');
+  pixModal?.classList.add('hidden');
 });
 
-// --- ATUALIZAÇÃO EM TEMPO REAL ---
-providerNameInput.addEventListener('input', (e) => {
+// --- RENDERIZAR PIX DO ASAAS NO MODAL ---
+async function renderPixCheckout() {
+  if (!qrCodeBox) return;
+
+  qrCodeBox.innerHTML = `<p class="text-xs text-slate-500 animate-pulse py-4 text-center">Gerando Pix no Asaas...</p>`;
+
+  const pixData = await generatePixPayment();
+
+  if (pixData) {
+    currentPixCode = pixData.payload;
+    qrCodeBox.innerHTML = `
+      <img src="${pixData.qrCodeImage}" alt="QR Code Pix Asaas" class="w-44 h-44 rounded-lg shadow-sm mb-2 mx-auto" />
+      <span class="text-[11px] text-slate-500 font-medium block text-center">Escaneie o QR Code no app do seu banco</span>
+    `;
+  } else {
+    qrCodeBox.innerHTML = `<p class="text-xs text-red-500 text-center py-4">Erro ao carregar o Pix. Verifique suas chaves no arquivo .env</p>`;
+  }
+}
+
+// Botão de Copiar Código Pix Copia e Cola
+btnCopyPix?.addEventListener('click', async () => {
+  if (!currentPixCode) return;
+  try {
+    await navigator.clipboard.writeText(currentPixCode);
+
+    const originalText = btnCopyPix.innerHTML;
+    btnCopyPix.innerHTML = '✅ Código Copiado!';
+    btnCopyPix.classList.remove('bg-slate-800', 'hover:bg-slate-900');
+    btnCopyPix.classList.add('bg-emerald-600', 'hover:bg-emerald-700');
+
+    setTimeout(() => {
+      btnCopyPix.innerHTML = originalText;
+      btnCopyPix.classList.remove('bg-emerald-600', 'hover:bg-emerald-700');
+      btnCopyPix.classList.add('bg-slate-800', 'hover:bg-slate-900');
+    }, 3000);
+
+  } catch (err) {
+    alert('Não foi possível copiar automaticamente. Selecione o código manualmente.');
+  }
+});
+
+// --- ATUALIZAÇÃO EM TEMPO REAL NO PREVIEW ---
+providerNameInput?.addEventListener('input', (e) => {
   previewProviderName.textContent = e.target.value || 'Seu Nome / Empresa';
 });
 
-providerPhoneInput.addEventListener('input', (e) => {
+providerPhoneInput?.addEventListener('input', (e) => {
   previewProviderPhone.textContent = e.target.value ? `Contato: ${e.target.value}` : 'Contato: (00) 00000-0000';
 });
 
-clientNameInput.addEventListener('input', (e) => {
+clientNameInput?.addEventListener('input', (e) => {
   previewClientName.textContent = e.target.value || 'Nome do Cliente';
 });
 
-clientPhoneInput.addEventListener('input', (e) => {
+clientPhoneInput?.addEventListener('input', (e) => {
   previewClientPhone.textContent = e.target.value || '(00) 00000-0000';
 });
 
-notesInput.addEventListener('input', (e) => {
+notesInput?.addEventListener('input', (e) => {
   previewNotes.textContent = e.target.value || 'Sem observações adicionais.';
 });
 
@@ -127,9 +176,9 @@ function calculateAndRenderItems() {
   previewTotal.textContent = `R$ ${grandTotal.toFixed(2).replace('.', ',')}`;
 }
 
-itemsContainer.addEventListener('input', calculateAndRenderItems);
+itemsContainer?.addEventListener('input', calculateAndRenderItems);
 
-btnAddItem.addEventListener('click', () => {
+btnAddItem?.addEventListener('click', () => {
   const newRow = document.createElement('div');
   newRow.className = 'item-row grid grid-cols-12 gap-2 items-center bg-slate-50 p-2 rounded-lg border border-slate-200';
   newRow.innerHTML = `
@@ -155,18 +204,18 @@ document.querySelectorAll('.btn-remove-item').forEach(btn => {
   });
 });
 
-// --- GERAR PDF COM VERIFICAÇÃO DE LIMITE ---
-btnGeneratePdf.addEventListener('click', async () => {
-  // 1. Verifica uso atual no Supabase
+// --- GERAR PDF COM TRAVA DO LIMITADOR E ASAAS ---
+btnGeneratePdf?.addEventListener('click', async () => {
   const currentUsage = await checkUsageLimit();
 
-  // 2. Se atingiu ou passou do limite (3), exibe o Modal Pix e cancela o download
+  // Se atingiu o limite (3), abre o modal e chama a API do Asaas
   if (currentUsage >= MAX_FREE_LIMIT) {
-    pixModal.classList.remove('hidden');
+    renderPixCheckout();
+    pixModal?.classList.remove('hidden');
     return;
   }
 
-  // 3. Se estiver dentro do limite, gera e baixa o PDF
+  // Download do PDF
   const element = document.getElementById('pdf-template');
   const clientName = clientNameInput.value.trim() || 'Cliente';
 
@@ -180,7 +229,7 @@ btnGeneratePdf.addEventListener('click', async () => {
 
   html2pdf().set(options).from(element).save();
 
-  // 4. Registra o uso no banco de dados do Supabase
+  // Registro no Supabase
   const totalText = previewTotal.textContent.replace('R$', '').replace('.', '').replace(',', '.').trim();
   const grandTotal = parseFloat(totalText) || 0;
 
@@ -193,12 +242,11 @@ btnGeneratePdf.addEventListener('click', async () => {
     }
   ]);
 
-  // 5. Atualiza o contador no cabeçalho
   checkUsageLimit();
 });
 
 // --- ENVIO DIRETO PARA WHATSAPP ---
-btnSendWhatsapp.addEventListener('click', () => {
+btnSendWhatsapp?.addEventListener('click', () => {
   const rawPhone = clientPhoneInput.value.replace(/\D/g, '');
   const clientName = clientNameInput.value.trim() || 'Cliente';
   const providerName = providerNameInput.value.trim() || 'Sua Empresa';
