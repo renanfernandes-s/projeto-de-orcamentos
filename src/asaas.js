@@ -1,18 +1,12 @@
 const ASAAS_URL = import.meta.env.VITE_ASAAS_URL;
 const API_KEY = import.meta.env.VITE_ASAAS_API_KEY;
 
-
-// Adicione este log temporário para debugar no navegador:
-console.log('Chave carregada pelo Vite:', API_KEY);
-
-
-// Cabeçalhos padrão para autenticação na API do Asaas
 const getHeaders = () => ({
     'Content-Type': 'application/json',
     'access_token': API_KEY
 });
 
-// 1. Busca um cliente de teste ou cria um novo no Asaas
+// Busca ou cria o cliente no Sandbox
 async function getOrCreateCustomer() {
     try {
         const response = await fetch(`${ASAAS_URL}/customers?email=teste.orcafacil@email.com`, {
@@ -20,34 +14,26 @@ async function getOrCreateCustomer() {
         });
 
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`[Asaas Error ${response.status}]:`, errorText);
-            throw new Error(`Erro de autenticação no Asaas (${response.status}). Verifique se a chave VITE_ASAAS_API_KEY no arquivo .env está correta.`);
+            throw new Error(`Erro na API do Asaas (${response.status})`);
         }
 
         const data = await response.json();
 
-        // Retorna o ID se o cliente já existir
         if (data.data && data.data.length > 0) {
             return data.data[0].id;
         }
 
-        // Se não existir, cria o cliente com CPF de teste válido
         const createRes = await fetch(`${ASAAS_URL}/customers`, {
             method: 'POST',
             headers: getHeaders(),
             body: JSON.stringify({
                 name: 'Cliente Teste OrçaFácil',
                 email: 'teste.orcafacil@email.com',
-                cpfCnpj: '12345678909' // CPF válido de teste para o Sandbox
+                cpfCnpj: '12345678909'
             })
         });
 
-        if (!createRes.ok) {
-            const errorText = await createRes.text();
-            console.error('[Asaas Error ao criar cliente]:', errorText);
-            throw new Error('Não foi possível cadastrar o cliente de teste no Asaas.');
-        }
+        if (!createRes.ok) throw new Error('Falha ao criar cliente de teste');
 
         const newCustomer = await createRes.json();
         return newCustomer.id;
@@ -57,15 +43,12 @@ async function getOrCreateCustomer() {
     }
 }
 
-// 2. Gera a cobrança Pix de R$ 14,90 e obtém o QR Code + Copia e Cola
+// Gera a cobrança Pix e devolve a imagem, o copia-e-cola e o ID do pagamento
 export async function generatePixPayment() {
     try {
         const customerId = await getOrCreateCustomer();
-
-        // Vencimento para o dia seguinte
         const dueDate = new Date(Date.now() + 86400000).toISOString().split('T')[0];
 
-        // Criar a cobrança no Asaas
         const paymentRes = await fetch(`${ASAAS_URL}/payments`, {
             method: 'POST',
             headers: getHeaders(),
@@ -78,33 +61,41 @@ export async function generatePixPayment() {
             })
         });
 
-        if (!paymentRes.ok) {
-            const errorText = await paymentRes.text();
-            console.error('[Asaas Error ao criar cobrança]:', errorText);
-            return null;
-        }
-
+        if (!paymentRes.ok) return null;
         const paymentData = await paymentRes.json();
 
-        // Buscar a imagem do QR Code e o código Pix Copia e Cola (payload)
         const qrRes = await fetch(`${ASAAS_URL}/payments/${paymentData.id}/pixQrCode`, {
             headers: getHeaders()
         });
 
-        if (!qrRes.ok) {
-            const errorText = await qrRes.text();
-            console.error('[Asaas Error ao gerar QR Code Pix]:', errorText);
-            return null;
-        }
-
+        if (!qrRes.ok) return null;
         const qrData = await qrRes.json();
 
         return {
+            paymentId: paymentData.id, // ID necessário para verificar se foi pago
             qrCodeImage: `data:image/png;base64,${qrData.encodedImage}`,
             payload: qrData.payload
         };
     } catch (err) {
-        console.error('Erro geral na API do Asaas:', err);
+        console.error('Erro ao gerar pagamento Pix:', err);
         return null;
+    }
+}
+
+// Consulta o status da cobrança no Asaas
+export async function checkPaymentStatus(paymentId) {
+    try {
+        const response = await fetch(`${ASAAS_URL}/payments/${paymentId}`, {
+            headers: getHeaders()
+        });
+
+        if (!response.ok) return false;
+
+        const data = await response.json();
+        // Retorna true se o pagamento foi recebido ou confirmado
+        return data.status === 'RECEIVED' || data.status === 'CONFIRMED' || data.status === 'RECEIVED_IN_CASH';
+    } catch (err) {
+        console.error('Erro ao verificar status do pagamento:', err);
+        return false;
     }
 }

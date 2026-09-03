@@ -1,7 +1,7 @@
 import './style.css';
 import html2pdf from 'html2pdf.js';
 import { supabase } from './supabase.js';
-import { generatePixPayment } from './asaas.js';
+import { generatePixPayment, checkPaymentStatus } from './asaas.js';
 
 // --- SELETORES DO DOM ---
 const providerNameInput = document.getElementById('provider-name');
@@ -30,10 +30,31 @@ const pixModal = document.getElementById('pix-modal');
 const btnCloseModal = document.getElementById('btn-close-modal');
 const btnCopyPix = document.getElementById('btn-copy-pix');
 const qrCodeBox = document.getElementById('qr-code-box');
-const MAX_FREE_LIMIT = 3;
+const MAX_FREE_LIMIT = 0;
 
-// Guardar o código Pix Copia e Cola retornado pelo Asaas
 let currentPixCode = "";
+let pollInterval = null;
+
+// --- VERIFICAÇÃO / ATIVAÇÃO DO PLANO PRO ---
+function isProUser() {
+  return localStorage.getItem('orcafacil_is_pro') === 'true';
+}
+
+function activateProPlan() {
+  localStorage.setItem('orcafacil_is_pro', 'true');
+
+  const usageBadge = document.getElementById('usage-badge');
+  if (usageBadge) {
+    usageBadge.textContent = 'Plano Pro Ativo (Ilimitado)';
+    usageBadge.classList.remove('bg-purple-100', 'text-purple-700');
+    usageBadge.classList.add('bg-emerald-100', 'text-emerald-700');
+  }
+}
+
+// Checa status Pro ao abrir o app
+if (isProUser()) {
+  activateProPlan();
+}
 
 // Define a data atual na visualização
 if (previewDate) {
@@ -67,34 +88,62 @@ async function checkUsageLimit() {
   return totalUsed;
 }
 
-// Inicializa contador na tela ao carregar a página
 checkUsageLimit();
 
-// Fechar o modal
-btnCloseModal?.addEventListener('click', () => {
+// --- GERENCIAMENTO DO MODAL E POLLING ---
+function closePixModal() {
+  if (pollInterval) {
+    clearInterval(pollInterval);
+    pollInterval = null;
+  }
   pixModal?.classList.add('hidden');
-});
+}
+
+btnCloseModal?.addEventListener('click', closePixModal);
 
 // --- RENDERIZAR PIX DO ASAAS NO MODAL ---
 async function renderPixCheckout() {
-  if (!qrCodeBox) return;
+  if (pollInterval) clearInterval(pollInterval);
 
-  qrCodeBox.innerHTML = `<p class="text-xs text-slate-500 animate-pulse py-4 text-center">Gerando Pix no Asaas...</p>`;
+  if (qrCodeBox) {
+    qrCodeBox.innerHTML = `<p class="text-xs text-slate-500 animate-pulse py-4 text-center">Gerando Pix no Asaas...</p>`;
+  }
 
-  const pixData = await generatePixPayment();
+  // Apenas UMA chamada para a API do Asaas
+  const paymentInfo = await generatePixPayment();
 
-  if (pixData) {
-    currentPixCode = pixData.payload;
+  if (!paymentInfo) {
+    if (qrCodeBox) {
+      qrCodeBox.innerHTML = `<p class="text-xs text-red-500 text-center py-4">Erro ao carregar o Pix. Verifique suas chaves no .env</p>`;
+    }
+    alert('Erro ao gerar cobrança Pix.');
+    return;
+  }
+
+  currentPixCode = paymentInfo.payload;
+  if (qrCodeBox) {
     qrCodeBox.innerHTML = `
-      <img src="${pixData.qrCodeImage}" alt="QR Code Pix Asaas" class="w-44 h-44 rounded-lg shadow-sm mb-2 mx-auto" />
+      <img src="${paymentInfo.qrCodeImage}" alt="QR Code Pix Asaas" class="w-44 h-44 rounded-lg shadow-sm mb-2 mx-auto" />
       <span class="text-[11px] text-slate-500 font-medium block text-center">Escaneie o QR Code no app do seu banco</span>
     `;
-  } else {
-    qrCodeBox.innerHTML = `<p class="text-xs text-red-500 text-center py-4">Erro ao carregar o Pix. Verifique suas chaves no arquivo .env</p>`;
   }
+
+  // Inicia o Polling de 4 em 4 segundos
+  pollInterval = setInterval(async () => {
+    const isPaid = await checkPaymentStatus(paymentInfo.paymentId);
+
+    if (isPaid) {
+      clearInterval(pollInterval);
+      pollInterval = null;
+
+      activateProPlan();
+      alert('🎉 Pagamento confirmado! Seu Plano Pro foi ativado com sucesso.');
+      closePixModal();
+    }
+  }, 4000);
 }
 
-// Botão de Copiar Código Pix Copia e Cola
+// Botão de Copiar Código Pix
 btnCopyPix?.addEventListener('click', async () => {
   if (!currentPixCode) return;
   try {
@@ -112,7 +161,7 @@ btnCopyPix?.addEventListener('click', async () => {
     }, 3000);
 
   } catch (err) {
-    alert('Não foi possível copiar automaticamente. Selecione o código manualmente.');
+    alert('Não foi possível copiar automaticamente.');
   }
 });
 
@@ -197,25 +246,18 @@ btnAddItem?.addEventListener('click', () => {
   calculateAndRenderItems();
 });
 
-document.querySelectorAll('.btn-remove-item').forEach(btn => {
-  btn.addEventListener('click', (e) => {
-    e.target.closest('.item-row').remove();
-    calculateAndRenderItems();
-  });
-});
-
-// --- GERAR PDF COM TRAVA DO LIMITADOR E ASAAS ---
+// --- GERAR PDF COM VERIFICAÇÃO DE LIMITE E PLANO PRO ---
 btnGeneratePdf?.addEventListener('click', async () => {
   const currentUsage = await checkUsageLimit();
 
-  // Se atingiu o limite (3), abre o modal e chama a API do Asaas
-  if (currentUsage >= MAX_FREE_LIMIT) {
+  // Bloqueia APENAS se atingiu o limite E NÃO for usuário Pro
+  if (currentUsage >= MAX_FREE_LIMIT && !isProUser()) {
     renderPixCheckout();
     pixModal?.classList.remove('hidden');
     return;
   }
 
-  // Download do PDF
+  // Gerar PDF
   const element = document.getElementById('pdf-template');
   const clientName = clientNameInput.value.trim() || 'Cliente';
 
@@ -229,7 +271,7 @@ btnGeneratePdf?.addEventListener('click', async () => {
 
   html2pdf().set(options).from(element).save();
 
-  // Registro no Supabase
+  // Registrar no Supabase
   const totalText = previewTotal.textContent.replace('R$', '').replace('.', '').replace(',', '.').trim();
   const grandTotal = parseFloat(totalText) || 0;
 
