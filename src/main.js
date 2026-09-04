@@ -30,7 +30,7 @@ const pixModal = document.getElementById('pix-modal');
 const btnCloseModal = document.getElementById('btn-close-modal');
 const btnCopyPix = document.getElementById('btn-copy-pix');
 const qrCodeBox = document.getElementById('qr-code-box');
-const MAX_FREE_LIMIT = 0;
+const MAX_FREE_LIMIT = 3;
 
 let currentPixCode = "";
 let pollInterval = null;
