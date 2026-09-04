@@ -10,20 +10,34 @@
 
 <body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col antialiased">
 
+  <!-- Header Organizado -->
   <header class="bg-indigo-600 text-white shadow-md sticky top-0 z-30">
     <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
       <div class="flex items-center gap-2">
         <span class="text-2xl font-black tracking-wider">Orça<span class="text-emerald-400">Fácil</span></span>
       </div>
+
       <div class="flex items-center gap-4">
         <span id="usage-badge"
           class="bg-indigo-700 text-indigo-100 text-xs font-semibold px-3 py-1.5 rounded-full border border-indigo-500">
           Uso Grátis: <strong id="used-count" class="text-white">0</strong>/3
         </span>
-        <button id="btn-login"
-          class="bg-emerald-500 hover:bg-emerald-600 text-white font-medium text-sm px-4 py-1.5 rounded-lg transition shadow-sm">
-          Entrar / Assinar Pro
-        </button>
+
+        <!-- Bloco de Autenticação Integrado -->
+        <div id="auth-buttons-container">
+          <div id="logged-out-view">
+            <button id="btn-open-login"
+              class="bg-emerald-500 hover:bg-emerald-600 text-white font-medium text-sm px-4 py-1.5 rounded-lg transition shadow-sm">
+              Entrar / Cadastrar
+            </button>
+          </div>
+          <div id="logged-in-view" class="flex items-center gap-2" style="display: none;">
+            <span id="user-email-display" class="text-xs text-indigo-100 font-medium"></span>
+            <span id="user-status-badge"
+              class="bg-slate-700 text-white text-xs font-bold px-2.5 py-1 rounded-full">Gratuito</span>
+            <button id="btn-logout" class="text-xs text-indigo-200 hover:text-white underline ml-2">Sair</button>
+          </div>
+        </div>
       </div>
     </div>
   </header>
@@ -179,6 +193,7 @@
 
   </main>
 
+  <!-- Modal Pix -->
   <div id="pix-modal"
     class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white max-w-md w-full rounded-2xl shadow-2xl p-6 text-center space-y-4">
@@ -207,6 +222,41 @@
       <button id="btn-close-modal" class="text-xs text-slate-400 hover:text-slate-600 underline">
         Fechar
       </button>
+    </div>
+  </div>
+
+  <!-- Modal de Login / Cadastro Estilizado (Tailwind CSS) -->
+  <div id="auth-modal"
+    class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white max-w-md w-full rounded-2xl shadow-2xl p-6 space-y-4 relative">
+      <button id="btn-close-auth-modal"
+        class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+
+      <h2 id="auth-modal-title" class="text-xl font-black text-slate-900 text-center">Acessar sua Conta</h2>
+
+      <form id="auth-form" class="space-y-4">
+        <div>
+          <label for="auth-email" class="block text-xs font-semibold text-slate-600 uppercase mb-1">E-mail</label>
+          <input type="email" id="auth-email" required placeholder="seu@email.com"
+            class="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+        </div>
+
+        <div>
+          <label for="auth-password" class="block text-xs font-semibold text-slate-600 uppercase mb-1">Senha</label>
+          <input type="password" id="auth-password" required placeholder="******"
+            class="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+        </div>
+
+        <button type="submit" id="btn-submit-auth"
+          class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-lg text-sm transition">
+          Entrar
+        </button>
+      </form>
+
+      <p class="text-center text-xs text-slate-600 pt-2">
+        <span id="auth-toggle-text">Não tem uma conta?</span>
+        <a href="#" id="auth-toggle-btn" class="text-indigo-600 font-bold hover:underline ml-1">Cadastre-se</a>
+      </p>
     </div>
   </div>
 

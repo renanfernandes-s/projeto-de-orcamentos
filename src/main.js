@@ -3,6 +3,15 @@ import html2pdf from 'html2pdf.js';
 import { supabase } from './supabase.js';
 import { generatePixPayment, checkPaymentStatus } from './asaas.js';
 
+// --- IDENTIFICADOR DO DISPOSITIVO E LIMITE ---
+const deviceId = localStorage.getItem('orcafacil_device_id') || (() => {
+  const newId = crypto.randomUUID();
+  localStorage.setItem('orcafacil_device_id', newId);
+  return newId;
+})();
+
+const MAX_FREE_LIMIT = 3;
+
 // --- SELETORES DO DOM ---
 const providerNameInput = document.getElementById('provider-name');
 const providerPhoneInput = document.getElementById('provider-phone');
@@ -30,12 +39,24 @@ const pixModal = document.getElementById('pix-modal');
 const btnCloseModal = document.getElementById('btn-close-modal');
 const btnCopyPix = document.getElementById('btn-copy-pix');
 const qrCodeBox = document.getElementById('qr-code-box');
-const MAX_FREE_LIMIT = 3;
 
 let currentPixCode = "";
 let pollInterval = null;
+let currentUser = null;
+let isSignUpMode = false;
 
-// --- VERIFICAÇÃO / ATIVAÇÃO DO PLANO PRO ---
+// --- VERIFICAÇÃO E CONTAGEM DE USO ---
+async function checkUsageLimit() {
+  const { count, error } = await supabase
+    .from('budgets')
+    .select('*', { count: 'exact', head: true })
+    .eq('device_id', deviceId);
+
+  const currentCount = error ? 0 : (count || 0);
+  if (usedCountEl) usedCountEl.textContent = currentCount;
+  return currentCount;
+}
+
 function isProUser() {
   return localStorage.getItem('orcafacil_is_pro') === 'true';
 }
@@ -46,51 +67,97 @@ function activateProPlan() {
   const usageBadge = document.getElementById('usage-badge');
   if (usageBadge) {
     usageBadge.textContent = 'Plano Pro Ativo (Ilimitado)';
-    usageBadge.classList.remove('bg-purple-100', 'text-purple-700');
-    usageBadge.classList.add('bg-emerald-100', 'text-emerald-700');
+    usageBadge.className = 'bg-emerald-100 text-emerald-700 text-xs font-semibold px-3 py-1.5 rounded-full border border-emerald-300';
   }
 }
 
-// Checa status Pro ao abrir o app
+// Inicializações
 if (isProUser()) {
   activateProPlan();
+} else {
+  checkUsageLimit();
 }
 
-// Define a data atual na visualização
 if (previewDate) {
   previewDate.textContent = new Date().toLocaleDateString('pt-BR');
 }
 
-// --- IDENTIFICADOR ÚNICO DO DISPOSITIVO ---
-let deviceId = localStorage.getItem('orcafacil_device_id');
-if (!deviceId) {
-  deviceId = crypto.randomUUID();
-  localStorage.setItem('orcafacil_device_id', deviceId);
-}
+// --- AUTENTICAÇÃO SUPABASE ---
+const authModal = document.getElementById('auth-modal');
+const toggleBtn = document.getElementById('auth-toggle-btn');
 
-// --- VERIFICAÇÃO DE LIMITE NO SUPABASE ---
-async function checkUsageLimit() {
-  const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+toggleBtn?.addEventListener('click', (e) => {
+  e.preventDefault();
+  isSignUpMode = !isSignUpMode;
 
-  const { count, error } = await supabase
-    .from('budgets')
-    .select('*', { count: 'exact', head: true })
-    .eq('device_id', deviceId)
-    .gte('created_at', startOfMonth);
+  document.getElementById('auth-modal-title').innerText = isSignUpMode ? 'Criar Conta' : 'Acessar sua Conta';
+  document.getElementById('btn-submit-auth').innerText = isSignUpMode ? 'Cadastrar' : 'Entrar';
+  document.getElementById('auth-toggle-text').innerText = isSignUpMode ? 'Já tem uma conta?' : 'Não tem uma conta?';
+  toggleBtn.innerText = isSignUpMode ? 'Entrar' : 'Cadastre-se';
+});
 
-  if (error) {
-    console.error('Erro ao consultar Supabase:', error);
-    return 0;
+document.getElementById('btn-open-login').onclick = () => authModal?.classList.remove('hidden');
+document.getElementById('btn-close-auth-modal').onclick = () => authModal?.classList.add('hidden');
+
+document.getElementById('auth-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('auth-email').value;
+  const password = document.getElementById('auth-password').value;
+
+  try {
+    if (isSignUpMode) {
+      const { error } = await supabase.auth.signUp({ email, password });
+      if (error) throw error;
+      alert('Cadastro realizado com sucesso!');
+    } else {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+    }
+    authModal?.classList.add('hidden');
+  } catch (err) {
+    alert('Erro na autenticação: ' + err.message);
   }
+});
 
-  const totalUsed = count || 0;
-  if (usedCountEl) usedCountEl.textContent = totalUsed;
-  return totalUsed;
+document.getElementById('btn-logout').onclick = async () => {
+  await supabase.auth.signOut();
+};
+
+supabase.auth.onAuthStateChange(async (event, session) => {
+  if (session) {
+    currentUser = session.user;
+    document.getElementById('logged-out-view').style.display = 'none';
+    document.getElementById('logged-in-view').style.display = 'flex';
+    document.getElementById('user-email-display').innerText = currentUser.email;
+
+    await checkProStatus(currentUser.id);
+  } else {
+    currentUser = null;
+    document.getElementById('logged-out-view').style.display = 'block';
+    document.getElementById('logged-in-view').style.display = 'none';
+    localStorage.removeItem('orcafacil_is_pro');
+  }
+});
+
+async function checkProStatus(userId) {
+  const { data } = await supabase
+    .from('profiles')
+    .select('is_pro')
+    .eq('id', userId)
+    .single();
+
+  if (data && data.is_pro) {
+    activateProPlan();
+    document.getElementById('user-status-badge').innerText = 'Plano PRO';
+    document.getElementById('user-status-badge').className = 'bg-emerald-500 text-white text-xs font-bold px-2.5 py-1 rounded-full';
+  } else {
+    localStorage.removeItem('orcafacil_is_pro');
+    document.getElementById('user-status-badge').innerText = 'Gratuito';
+    document.getElementById('user-status-badge').className = 'bg-slate-700 text-white text-xs font-bold px-2.5 py-1 rounded-full';
+  }
 }
 
-checkUsageLimit();
-
-// --- GERENCIAMENTO DO MODAL E POLLING ---
+// --- GERENCIAMENTO DO MODAL PIX E POLLING ---
 function closePixModal() {
   if (pollInterval) {
     clearInterval(pollInterval);
@@ -101,7 +168,6 @@ function closePixModal() {
 
 btnCloseModal?.addEventListener('click', closePixModal);
 
-// --- RENDERIZAR PIX DO ASAAS NO MODAL ---
 async function renderPixCheckout() {
   if (pollInterval) clearInterval(pollInterval);
 
@@ -109,12 +175,11 @@ async function renderPixCheckout() {
     qrCodeBox.innerHTML = `<p class="text-xs text-slate-500 animate-pulse py-4 text-center">Gerando Pix no Asaas...</p>`;
   }
 
-  // Apenas UMA chamada para a API do Asaas
   const paymentInfo = await generatePixPayment();
 
   if (!paymentInfo) {
     if (qrCodeBox) {
-      qrCodeBox.innerHTML = `<p class="text-xs text-red-500 text-center py-4">Erro ao carregar o Pix. Verifique suas chaves no .env</p>`;
+      qrCodeBox.innerHTML = `<p class="text-xs text-red-500 text-center py-4">Erro ao carregar o Pix. Verifique as configurações.</p>`;
     }
     alert('Erro ao gerar cobrança Pix.');
     return;
@@ -128,7 +193,6 @@ async function renderPixCheckout() {
     `;
   }
 
-  // Inicia o Polling de 4 em 4 segundos
   pollInterval = setInterval(async () => {
     const isPaid = await checkPaymentStatus(paymentInfo.paymentId);
 
@@ -137,13 +201,21 @@ async function renderPixCheckout() {
       pollInterval = null;
 
       activateProPlan();
+
+      // Atualiza no banco de dados se o usuário estiver logado
+      if (currentUser) {
+        await supabase
+          .from('profiles')
+          .update({ is_pro: true })
+          .eq('id', currentUser.id);
+      }
+
       alert('🎉 Pagamento confirmado! Seu Plano Pro foi ativado com sucesso.');
       closePixModal();
     }
   }, 4000);
 }
 
-// Botão de Copiar Código Pix
 btnCopyPix?.addEventListener('click', async () => {
   if (!currentPixCode) return;
   try {
@@ -186,7 +258,7 @@ notesInput?.addEventListener('input', (e) => {
   previewNotes.textContent = e.target.value || 'Sem observações adicionais.';
 });
 
-// --- LÓGICA DA TABELA DE ITENS E CÁLCULO DE TOTAL ---
+// --- CÁLCULO DOS ITENS ---
 function calculateAndRenderItems() {
   const rows = itemsContainer.querySelectorAll('.item-row');
   let grandTotal = 0;
@@ -246,18 +318,16 @@ btnAddItem?.addEventListener('click', () => {
   calculateAndRenderItems();
 });
 
-// --- GERAR PDF COM VERIFICAÇÃO DE LIMITE E PLANO PRO ---
+// --- GERAR PDF COM VERIFICAÇÃO DE LIMITE ---
 btnGeneratePdf?.addEventListener('click', async () => {
   const currentUsage = await checkUsageLimit();
 
-  // Bloqueia APENAS se atingiu o limite E NÃO for usuário Pro
   if (currentUsage >= MAX_FREE_LIMIT && !isProUser()) {
     renderPixCheckout();
     pixModal?.classList.remove('hidden');
     return;
   }
 
-  // Gerar PDF
   const element = document.getElementById('pdf-template');
   const clientName = clientNameInput.value.trim() || 'Cliente';
 
@@ -271,7 +341,6 @@ btnGeneratePdf?.addEventListener('click', async () => {
 
   html2pdf().set(options).from(element).save();
 
-  // Registrar no Supabase
   const totalText = previewTotal.textContent.replace('R$', '').replace('.', '').replace(',', '.').trim();
   const grandTotal = parseFloat(totalText) || 0;
 
@@ -287,7 +356,7 @@ btnGeneratePdf?.addEventListener('click', async () => {
   checkUsageLimit();
 });
 
-// --- ENVIO DIRETO PARA WHATSAPP ---
+// --- ENVIO WHATSAPP ---
 btnSendWhatsapp?.addEventListener('click', () => {
   const rawPhone = clientPhoneInput.value.replace(/\D/g, '');
   const clientName = clientNameInput.value.trim() || 'Cliente';
