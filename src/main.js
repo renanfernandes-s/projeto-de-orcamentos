@@ -32,12 +32,15 @@ const modalProEl = document.getElementById('modal-pro');
 const btnAssinarProEl = document.getElementById('btn-assinar-pro');
 const btnFecharModalEl = document.getElementById('btn-fechar-modal');
 const btnCopiarPixEl = document.getElementById('btn-copiar-pix');
-const btnSimularAprovacaoEl = document.getElementById('btn-simular-aprovacao');
 const btnConcluirProEl = document.getElementById('btn-concluir-pro');
 
 const etapaOfertaEl = document.getElementById('modal-etapa-oferta');
 const etapaPixEl = document.getElementById('modal-etapa-pix');
 const etapaSucessoEl = document.getElementById('modal-etapa-sucesso');
+
+// Elementos visuais do QR Code Pix
+const containerQrCodeEl = document.getElementById('container-qrcode-pix');
+const inputPixCopiaColaEl = document.getElementById('pix-copia-cola');
 
 // --- Formatação Monetária ---
 const formatarMoeda = (valor) => {
@@ -155,11 +158,10 @@ listaItensEl.addEventListener('click', (e) => {
   }
 });
 
-// --- Event Listeners do Modal PRO e Pix ---
+// --- Event Listeners do Modal PRO e Geração de Pix Real ---
 if (btnFecharModalEl) {
   btnFecharModalEl.addEventListener('click', () => {
     modalProEl.classList.add('hidden');
-    // Reseta para a etapa inicial ao fechar
     etapaOfertaEl.classList.remove('hidden');
     etapaPixEl.classList.add('hidden');
     etapaSucessoEl.classList.add('hidden');
@@ -167,43 +169,61 @@ if (btnFecharModalEl) {
 }
 
 if (btnAssinarProEl) {
-  btnAssinarProEl.addEventListener('click', () => {
-    etapaOfertaEl.classList.add('hidden');
-    etapaPixEl.classList.remove('hidden');
+  btnAssinarProEl.addEventListener('click', async () => {
+    if (!currentUser) {
+      alert("Você precisa estar logado para assinar.");
+      return;
+    }
+
+    btnAssinarProEl.disabled = true;
+    btnAssinarProEl.textContent = "Gerando Pix seguro...";
+
+    try {
+      const response = await fetch('/api/gerar-pix', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: currentUser.id, userEmail: currentUser.email })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao gerar Pix');
+      }
+
+      // Injeta a imagem real do QR Code retornada pelo Asaas
+      if (containerQrCodeEl) {
+        containerQrCodeEl.innerHTML = `<img src="data:image/png;base64,${data.encodedImage}" alt="QR Code Pix" class="w-48 h-48 mx-auto object-contain">`;
+      }
+
+      // Preenche o input Copia e Cola
+      if (inputPixCopiaColaEl) {
+        inputPixCopiaColaEl.value = data.payload;
+      }
+
+      // Avança para a etapa do Pix
+      etapaOfertaEl.classList.add('hidden');
+      etapaPixEl.classList.remove('hidden');
+
+      // Inicia verificação automática de status da aprovação via webhook
+      iniciarVerificacaoStatusPro();
+
+    } catch (err) {
+      console.error(err);
+      alert("Não foi possível gerar o QR Code Pix. Tente novamente.");
+    } finally {
+      btnAssinarProEl.disabled = false;
+      btnAssinarProEl.textContent = "Assinar Agora (Pix)";
+    }
   });
 }
 
 if (btnCopiarPixEl) {
   btnCopiarPixEl.addEventListener('click', () => {
-    const inputPix = document.getElementById('pix-copia-cola');
-    inputPix.select();
-    navigator.clipboard.writeText(inputPix.value);
-    alert("Código Pix Copia e Cola copiado com sucesso!");
-  });
-}
-
-if (btnSimularAprovacaoEl) {
-  btnSimularAprovacaoEl.addEventListener('click', async () => {
-    if (!currentUser) return;
-
-    btnSimularAprovacaoEl.disabled = true;
-    btnSimularAprovacaoEl.textContent = "Processando ativação...";
-
-    const { error } = await supabase
-      .from('profiles')
-      .update({ is_pro: true })
-      .eq('id', currentUser.id);
-
-    if (!error) {
-      isProUser = true;
-      if (proBadgeEl) proBadgeEl.classList.remove('hidden');
-
-      etapaPixEl.classList.add('hidden');
-      etapaSucessoEl.classList.remove('hidden');
-    } else {
-      alert("Erro ao ativar assinatura. Tente novamente.");
-      btnSimularAprovacaoEl.disabled = false;
-      btnSimularAprovacaoEl.textContent = "Simular Pagamento Aprovado (Teste)";
+    if (inputPixCopiaColaEl) {
+      inputPixCopiaColaEl.select();
+      navigator.clipboard.writeText(inputPixCopiaColaEl.value);
+      alert("Código Pix Copia e Cola copiado com sucesso!");
     }
   });
 }
@@ -213,6 +233,28 @@ if (btnConcluirProEl) {
     modalProEl.classList.add('hidden');
     window.location.reload();
   });
+}
+
+// Verificador automático de aprovação em segundo plano
+function iniciarVerificacaoStatusPro() {
+  const intervalo = setInterval(async () => {
+    if (!currentUser) return;
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('is_pro')
+      .eq('id', currentUser.id)
+      .single();
+
+    if (profile && profile.is_pro) {
+      clearInterval(intervalo);
+      isProUser = true;
+      if (proBadgeEl) proBadgeEl.classList.remove('hidden');
+
+      etapaPixEl.classList.add('hidden');
+      etapaSucessoEl.classList.remove('hidden');
+    }
+  }, 5000);
 }
 
 // --- Integração com Supabase (Sessão do Usuário) ---
