@@ -21,7 +21,43 @@ export default async function handler(req, res) {
         const asaasUrl = process.env.ASAAS_URL || 'https://api.asaas.com/v3';
         const asaasApiKey = process.env.ASAAS_API_KEY;
 
-        // Cria a cobrança no Asaas vinculando o ID do usuário no externalReference
+        // 1. Busca ou cria o cliente no Asaas pelo e-mail
+        const customerResponse = await fetch(`${asaasUrl}/customers?email=${encodeURIComponent(userEmail || 'cliente@orcafacil.com')}`, {
+            method: 'GET',
+            headers: {
+                'access_token': asaasApiKey
+            }
+        });
+
+        const customerData = await customerResponse.json();
+        let customerId;
+
+        if (customerData.data && customerData.data.length > 0) {
+            customerId = customerData.data[0].id;
+        } else {
+            // Se o cliente não existe, cria um novo
+            const newCustomerResponse = await fetch(`${asaasUrl}/customers`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'access_token': asaasApiKey
+                },
+                body: JSON.stringify({
+                    name: userEmail ? userEmail.split('@')[0] : 'Cliente OrçaFácil',
+                    email: useremail || 'cliente@orcafacil.com',
+                    externalReference: userId
+                })
+            });
+
+            const newCustomer = await newCustomerResponse.json();
+            if (!newCustomerResponse.ok) {
+                console.error('Erro ao criar cliente Asaas:', newCustomer);
+                return res.status(400).json({ error: 'Erro ao cadastrar cliente no gateway de pagamento', details: newCustomer });
+            }
+            customerId = newCustomer.id;
+        }
+
+        // 2. Cria a cobrança no Asaas vinculando o cliente correto
         const response = await fetch(`${asaasUrl}/payments`, {
             method: 'POST',
             headers: {
@@ -34,7 +70,7 @@ export default async function handler(req, res) {
                 dueDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
                 description: 'Assinatura Mensal - OrçaFácil PRO',
                 externalReference: userId,
-                customer: 'cus_000006272978' // Ajuste para o ID de um cliente padrão no Asaas se necessário
+                customer: customerId
             })
         });
 
@@ -45,7 +81,7 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'Erro ao gerar cobrança no Asaas', details: paymentData });
         }
 
-        // Busca os dados do QR Code da cobrança criada
+        // 3. Busca os dados do QR Code da cobrança criada
         const qrResponse = await fetch(`${asaasUrl}/payments/${paymentData.id}/pixQrCode`, {
             method: 'GET',
             headers: {
