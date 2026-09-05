@@ -44,7 +44,7 @@ export default async function handler(req, res) {
                 },
                 body: JSON.stringify({
                     name: userEmail ? userEmail.split('@')[0] : 'Cliente OrçaFácil',
-                    email: useremail || 'cliente@orcafacil.com',
+                    email: userEmail || 'cliente@orcafacil.com',
                     externalReference: userId
                 })
             });
