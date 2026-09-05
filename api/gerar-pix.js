@@ -11,29 +11,29 @@ export default async function handler(req, res) {
         return res.status(405).end('Method Not Allowed');
     }
 
-    const { userId, userEmail } = req.body;
+    const { userId, userEmail, cpf } = req.body;
 
     if (!userId) {
         return res.status(400).json({ error: 'Usuário não identificado' });
+    }
+
+    if (!cpf) {
+        return res.status(400).json({ error: 'O CPF é obrigatório para gerar o pagamento.' });
     }
 
     try {
         const asaasUrl = process.env.ASAAS_URL || 'https://api.asaas.com/v3';
         const asaasApiKey = process.env.ASAAS_API_KEY;
 
-        // 1. Busca os dados do usuário no Supabase (ex: tabela 'profiles' onde fica o CPF)
-        let userCpf = '02497171017'; // Fallback caso não encontre
-        const { data: profileData, error: profileError } = await supabaseAdmin
-            .from('profiles') // Ajuste para o nome exato da sua tabela de perfis se for diferente
-            .select('cpf, cpf_cnpj')
-            .eq('id', userId)
-            .single();
+        // Limpa o CPF (remove pontos e traços)
+        const cleanCpf = cpf.replace(/\D/g, '');
 
-        if (!profileError && profileData) {
-            userCpf = profileData.cpf || profileData.cpf_cnpj || userCpf;
-        }
+        // 1. Salva ou atualiza o CPF na tabela 'profiles' do Supabase para guardar o dado do cliente
+        await supabaseAdmin
+            .from('profiles')
+            .upsert({ id: userId, email: userEmail, cpf: cleanCpf }, { onConflict: 'id' });
 
-        // 2. Busca ou cria o cliente no Asaas pelo e-mail
+        // 2. Busca ou cria o cliente no Asaas pelo e-mail ou CPF
         const customerResponse = await fetch(`${asaasUrl}/customers?email=${encodeURIComponent(userEmail || 'cliente@orcafacil.com')}`, {
             method: 'GET',
             headers: {
@@ -46,8 +46,19 @@ export default async function handler(req, res) {
 
         if (customerData.data && customerData.data.length > 0) {
             customerId = customerData.data[0].id;
+
+            // Opcional: Atualiza o CPF do cliente existente no Asaas se necessário
+            await fetch(`${asaasUrl}/customers/${customerId}`, {
+                method: 'POST', // No Asaas, atualizações parciais costumam usar POST ou PUT dependendo da rota, mas vamos focar em garantir que ele exista com o CPF
+                headers: {
+                    'Content-Type': 'application/json',
+                    'access_token': asaasApiKey
+                },
+                body: JSON.stringify({ cpfCnpj: cleanCpf })
+            }).catch(() => { }); // silencia erro caso a atualização direta falhe
+
         } else {
-            // Se o cliente não existe, cria um novo passando o CPF do Supabase
+            // Se o cliente não existe, cria um novo passando o CPF informado
             const newCustomerResponse = await fetch(`${asaasUrl}/customers`, {
                 method: 'POST',
                 headers: {
@@ -57,7 +68,7 @@ export default async function handler(req, res) {
                 body: JSON.stringify({
                     name: userEmail ? userEmail.split('@')[0] : 'Cliente OrçaFácil',
                     email: userEmail || 'cliente@orcafacil.com',
-                    cpfCnpj: userCpf,
+                    cpfCnpj: cleanCpf,
                     externalReference: userId
                 })
             });

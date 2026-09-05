@@ -175,6 +175,13 @@ if (btnAssinarProEl) {
       return;
     }
 
+    const cpfInformado = prompt("Digite seu CPF para gerar a cobrança Pix (somente números):");
+
+    if (!cpfInformado) {
+      alert("O CPF é obrigatório para prosseguir com o pagamento.");
+      return;
+    }
+
     btnAssinarProEl.disabled = true;
     btnAssinarProEl.textContent = "Gerando Pix seguro...";
 
@@ -182,7 +189,11 @@ if (btnAssinarProEl) {
       const response = await fetch('/api/gerar-pix', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: currentUser.id, userEmail: currentUser.email })
+        body: JSON.stringify({
+          userId: currentUser.id,
+          userEmail: currentUser.email,
+          cpf: cpfInformado
+        })
       });
 
       const data = await response.json();
@@ -210,7 +221,7 @@ if (btnAssinarProEl) {
 
     } catch (err) {
       console.error(err);
-      alert("Não foi possível gerar o QR Code Pix. Tente novamente.");
+      alert(err.message || "Não foi possível gerar o QR Code Pix. Tente novamente.");
     } finally {
       btnAssinarProEl.disabled = false;
       btnAssinarProEl.textContent = "Assinar Agora (Pix)";
