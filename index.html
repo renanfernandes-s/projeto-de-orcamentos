@@ -176,54 +176,113 @@
 
   </main>
 
-  <!-- Modal de Upgrade PRO (Bloqueio Amigável de Limite) -->
+  <!-- Modal de Upgrade PRO & Pagamento Pix Asaas -->
   <div id="modal-pro"
     class="fixed inset-0 bg-indigo-950/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div
       class="bg-white rounded-2xl max-w-sm w-full p-6 text-center shadow-2xl border border-slate-100 animate-in fade-in zoom-in duration-200">
 
-      <!-- Ícone Destaque -->
-      <div
-        class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl mx-auto flex items-center justify-center text-2xl mb-4 font-black">
-        ⚡
+      <!-- ETAPA 1: Oferta e Venda -->
+      <div id="modal-etapa-oferta">
+        <div
+          class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl mx-auto flex items-center justify-center text-2xl mb-4 font-black">
+          ⚡
+        </div>
+        <h3 class="text-lg font-black text-indigo-950 tracking-tight mb-2">
+          Você atingiu o limite gratuito!
+        </h3>
+        <p class="text-xs text-slate-600 leading-relaxed mb-6">
+          Parabéns por aproveitar o <span class="font-bold text-indigo-950">OrçaFácil.app</span>! Para continuar
+          fechando negócios sem travar e emitir <span class="font-bold text-emerald-600">orçamentos ilimitados</span>
+          com a sua marca, garanta acesso completo ao plano profissional agora mesmo.
+        </p>
+        <div
+          class="bg-slate-50 rounded-xl p-3 text-left text-[11px] text-slate-700 space-y-2 mb-6 border border-slate-200/60">
+          <div class="flex items-center gap-2">
+            <span class="text-emerald-500 font-bold">✓</span> Orçamentos ilimitados sem restrições
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-emerald-500 font-bold">✓</span> PDF profissional pronto para o WhatsApp
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-emerald-500 font-bold">✓</span> Suporte prioritário para novos recursos
+          </div>
+        </div>
+        <div class="space-y-2.5">
+          <button id="btn-assinar-pro" type="button"
+            class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-xl text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/25 transition">
+            Quero Assinatura Ilimitada 🚀
+          </button>
+          <button id="btn-fechar-modal" type="button"
+            class="w-full py-2.5 bg-transparent hover:bg-slate-100 text-slate-400 hover:text-slate-600 font-bold rounded-xl text-xs transition">
+            Agora não
+          </button>
+        </div>
       </div>
 
-      <!-- Título Impactante -->
-      <h3 class="text-lg font-black text-indigo-950 tracking-tight mb-2">
-        Você atingiu o limite gratuito!
-      </h3>
-
-      <!-- Mensagem Persuasiva -->
-      <p class="text-xs text-slate-600 leading-relaxed mb-6">
-        Parabéns por aproveitar o <span class="font-bold text-indigo-950">OrçaFácil.app</span>! Para continuar fechando
-        negócios sem travar e emitir <span class="font-bold text-emerald-600">orçamentos ilimitados</span> com a sua
-        marca, garanta acesso completo ao plano profissional agora mesmo.
-      </p>
-
-      <!-- Benefícios Rápidos -->
-      <div
-        class="bg-slate-50 rounded-xl p-3 text-left text-[11px] text-slate-700 space-y-2 mb-6 border border-slate-200/60">
-        <div class="flex items-center gap-2">
-          <span class="text-emerald-500 font-bold">✓</span> Orçamentos ilimitados sem restrições
+      <!-- ETAPA 2: Pagamento Pix (Asaas) -->
+      <div id="modal-etapa-pix" class="hidden">
+        <div
+          class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-2xl mx-auto flex items-center justify-center text-xl mb-3 font-black">
+          📱
         </div>
-        <div class="flex items-center gap-2">
-          <span class="text-emerald-500 font-bold">✓</span> PDF profissional pronto para o WhatsApp
-        </div>
-        <div class="flex items-center gap-2">
-          <span class="text-emerald-500 font-bold">✓</span> Suporte prioritário para novos recursos
-        </div>
-      </div>
+        <h3 class="text-base font-black text-indigo-950 tracking-tight mb-1">
+          Pague com Pix para ativar
+        </h3>
+        <p class="text-[11px] text-slate-500 mb-4">
+          Escaneie o QR Code abaixo com o aplicativo do seu banco ou copie a chave.
+        </p>
 
-      <!-- Botões de Ação -->
-      <div class="space-y-2.5">
-        <button id="btn-assinar-pro" type="button"
-          class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-xl text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/25 transition">
-          Quero Assinatura Ilimitada 🚀
+        <!-- Simulação de QR Code (Substitua depois pelo link/imagem real gerada pela API do Asaas) -->
+        <div class="bg-slate-100 p-4 rounded-xl border border-slate-200 flex flex-col items-center justify-center mb-4">
+          <div
+            class="w-36 h-36 bg-white p-2 rounded-lg shadow-inner flex items-center justify-center border border-slate-200 mb-2">
+            <!-- Aqui entraria a imagem do QR Code do Asaas -->
+            <span class="text-[10px] text-slate-400 font-bold text-center">[ QR CODE PIX ASAAS ]</span>
+          </div>
+          <span class="text-xs font-black text-indigo-950">Valor: R$ 29,90 / mês</span>
+        </div>
+
+        <!-- Botão Copia e Cola -->
+        <div class="space-y-2 mb-4">
+          <input type="text" id="pix-copia-cola" readonly value="00020126580014br.gov.bcb.pix...[ChavePixAsaasSimulada]"
+            class="w-full text-[10px] bg-slate-50 text-slate-600 p-2 rounded-lg border border-slate-200 outline-none text-center truncate" />
+          <button id="btn-copiar-pix" type="button"
+            class="w-full py-2 bg-indigo-100 hover:bg-indigo-200 text-indigo-900 font-bold rounded-xl text-xs transition">
+            📋 Copiar Código Pix Copia e Cola
+          </button>
+        </div>
+
+        <!-- Status de Aguardando Pagamento -->
+        <div
+          class="bg-amber-50 border border-amber-200 rounded-xl p-2.5 text-[11px] text-amber-800 flex items-center justify-center gap-2 mb-4">
+          <span class="animate-spin text-sm">⏳</span>
+          <span>Aguardando confirmação do pagamento...</span>
+        </div>
+
+        <!-- Botão de simulação/verificação temporária -->
+        <button id="btn-simular-aprovacao" type="button"
+          class="w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl text-xs transition">
+          Simular Pagamento Aprovado (Teste)
         </button>
+      </div>
 
-        <button id="btn-fechar-modal" type="button"
-          class="w-full py-2.5 bg-transparent hover:bg-slate-100 text-slate-400 hover:text-slate-600 font-bold rounded-xl text-xs transition">
-          Agora não
+      <!-- ETAPA 3: Sucesso / Parabéns -->
+      <div id="modal-etapa-sucesso" class="hidden">
+        <div
+          class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full mx-auto flex items-center justify-center text-3xl mb-4 font-black animate-bounce">
+          ✓
+        </div>
+        <h3 class="text-lg font-black text-indigo-950 tracking-tight mb-2">
+          Assinatura Ativada com Sucesso! 🎉
+        </h3>
+        <p class="text-xs text-slate-600 leading-relaxed mb-6">
+          Parabéns! Sua conta agora é <span class="font-bold text-emerald-600">PRO</span>. Você já pode emitir quantos
+          orçamentos precisar de forma totalmente ilimitada.
+        </p>
+        <button id="btn-concluir-pro" type="button"
+          class="w-full py-3 bg-indigo-950 hover:bg-indigo-900 text-white font-black rounded-xl text-xs uppercase tracking-wider shadow-lg transition">
+          Começar a Usar Agora 🚀
         </button>
       </div>
 

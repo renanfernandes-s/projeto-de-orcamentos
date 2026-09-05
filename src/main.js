@@ -27,10 +27,17 @@ const valorTotalEl = document.getElementById('valor-total');
 const btnGerarPdfEl = document.getElementById('btn-gerar-pdf');
 const btnEnviarWhatsEl = document.getElementById('btn-enviar-whats');
 
-// --- Seleção de Elementos do Modal PRO ---
+// --- Seleção de Elementos do Modal PRO e Pix ---
 const modalProEl = document.getElementById('modal-pro');
 const btnAssinarProEl = document.getElementById('btn-assinar-pro');
 const btnFecharModalEl = document.getElementById('btn-fechar-modal');
+const btnCopiarPixEl = document.getElementById('btn-copiar-pix');
+const btnSimularAprovacaoEl = document.getElementById('btn-simular-aprovacao');
+const btnConcluirProEl = document.getElementById('btn-concluir-pro');
+
+const etapaOfertaEl = document.getElementById('modal-etapa-oferta');
+const etapaPixEl = document.getElementById('modal-etapa-pix');
+const etapaSucessoEl = document.getElementById('modal-etapa-sucesso');
 
 // --- Formatação Monetária ---
 const formatarMoeda = (valor) => {
@@ -130,7 +137,7 @@ function atualizarItem(index, field, value) {
   calcularTotais();
 }
 
-// --- Event Listeners dos Itens e Modal ---
+// --- Event Listeners dos Itens ---
 btnAddItemEl.addEventListener('click', adicionarItem);
 
 listaItensEl.addEventListener('input', (e) => {
@@ -148,19 +155,67 @@ listaItensEl.addEventListener('click', (e) => {
   }
 });
 
+// --- Event Listeners do Modal PRO e Pix ---
 if (btnFecharModalEl) {
   btnFecharModalEl.addEventListener('click', () => {
     modalProEl.classList.add('hidden');
+    // Reseta para a etapa inicial ao fechar
+    etapaOfertaEl.classList.remove('hidden');
+    etapaPixEl.classList.add('hidden');
+    etapaSucessoEl.classList.add('hidden');
   });
 }
 
 if (btnAssinarProEl) {
   btnAssinarProEl.addEventListener('click', () => {
-    alert("Redirecionando para o ambiente de pagamento seguro Asaas... (Integração na próxima etapa)");
+    etapaOfertaEl.classList.add('hidden');
+    etapaPixEl.classList.remove('hidden');
   });
 }
 
-// --- Integração com Supabase (Sessão do Usuário e Saldo Seguro) ---
+if (btnCopiarPixEl) {
+  btnCopiarPixEl.addEventListener('click', () => {
+    const inputPix = document.getElementById('pix-copia-cola');
+    inputPix.select();
+    navigator.clipboard.writeText(inputPix.value);
+    alert("Código Pix Copia e Cola copiado com sucesso!");
+  });
+}
+
+if (btnSimularAprovacaoEl) {
+  btnSimularAprovacaoEl.addEventListener('click', async () => {
+    if (!currentUser) return;
+
+    btnSimularAprovacaoEl.disabled = true;
+    btnSimularAprovacaoEl.textContent = "Processando ativação...";
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ is_pro: true })
+      .eq('id', currentUser.id);
+
+    if (!error) {
+      isProUser = true;
+      if (proBadgeEl) proBadgeEl.classList.remove('hidden');
+
+      etapaPixEl.classList.add('hidden');
+      etapaSucessoEl.classList.remove('hidden');
+    } else {
+      alert("Erro ao ativar assinatura. Tente novamente.");
+      btnSimularAprovacaoEl.disabled = false;
+      btnSimularAprovacaoEl.textContent = "Simular Pagamento Aprovado (Teste)";
+    }
+  });
+}
+
+if (btnConcluirProEl) {
+  btnConcluirProEl.addEventListener('click', () => {
+    modalProEl.classList.add('hidden');
+    window.location.reload();
+  });
+}
+
+// --- Integração com Supabase (Sessão do Usuário) ---
 async function carregarUsuario() {
   const { data: { user } } = await supabase.auth.getUser();
   currentUser = user;
@@ -170,7 +225,7 @@ async function carregarUsuario() {
     if (userInfoCardEl) userInfoCardEl.classList.remove('hidden');
     if (userEmailEl) userEmailEl.textContent = user.email;
 
-    let { data: profile, error } = await supabase
+    let { data: profile } = await supabase
       .from('profiles')
       .select('is_pro, pdf_count')
       .eq('id', user.id)
@@ -212,7 +267,7 @@ if (btnLogoutEl) {
   });
 }
 
-// --- Função para Gerar PDF (Com Exibição do Modal Amigável) ---
+// --- Função para Gerar PDF ---
 async function gerarPDF() {
   if (!currentUser) {
     alert("Você precisa fazer login para gerar o orçamento.");
@@ -247,7 +302,6 @@ async function gerarPDF() {
   const subtotal = itens.reduce((acc, item) => acc + (item.qtd * item.preco), 0);
 
   container.innerHTML = `
-    <!-- Cabeçalho -->
     <div class="flex justify-between items-start border-b border-slate-200 pb-6 mb-6">
       <div>
         <h1 class="text-2xl font-black text-indigo-950 tracking-tight">ORÇAMENTO</h1>
@@ -258,7 +312,6 @@ async function gerarPDF() {
       </div>
     </div>
 
-    <!-- Dados De/Para -->
     <div class="grid grid-cols-2 gap-6 mb-8 text-xs">
       <div class="bg-slate-50 p-3.5 rounded-lg border border-slate-100">
         <p class="font-bold text-slate-400 uppercase tracking-wider text-[10px] mb-1">PRESTADOR DE SERVIÇO</p>
@@ -272,7 +325,6 @@ async function gerarPDF() {
       </div>
     </div>
 
-    <!-- Tabela de Serviços -->
     <table class="w-full text-left text-xs mb-8 border-collapse">
       <thead>
         <tr class="border-b-2 border-slate-200 text-slate-500 font-bold uppercase text-[10px]">
@@ -294,7 +346,6 @@ async function gerarPDF() {
       </tbody>
     </table>
 
-    <!-- Total -->
     <div class="flex justify-end mb-12">
       <div class="w-1/2 bg-indigo-950 text-white p-4 rounded-xl text-right">
         <span class="text-xs uppercase tracking-wider text-slate-300 block mb-1">Valor Total</span>
@@ -302,7 +353,6 @@ async function gerarPDF() {
       </div>
     </div>
 
-    <!-- Rodapé -->
     <div class="text-center pt-6 border-t border-slate-100 text-[10px] text-slate-400">
       <p>Este orçamento tem validade de 15 dias. Gerado por Use OrçaFácilAPP.</p>
     </div>
