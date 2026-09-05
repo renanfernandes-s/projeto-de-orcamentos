@@ -90,7 +90,7 @@ export default async function handler(req, res) {
             },
             body: JSON.stringify({
                 billingType: 'PIX',
-                value: 29.90,
+                value: 14.90,
                 dueDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
                 description: 'Assinatura Mensal - OrçaFácil PRO',
                 externalReference: userId,
