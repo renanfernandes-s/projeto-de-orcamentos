@@ -176,6 +176,60 @@
 
   </main>
 
+  <!-- Modal de Upgrade PRO (Bloqueio Amigável de Limite) -->
+  <div id="modal-pro"
+    class="fixed inset-0 bg-indigo-950/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div
+      class="bg-white rounded-2xl max-w-sm w-full p-6 text-center shadow-2xl border border-slate-100 animate-in fade-in zoom-in duration-200">
+
+      <!-- Ícone Destaque -->
+      <div
+        class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl mx-auto flex items-center justify-center text-2xl mb-4 font-black">
+        ⚡
+      </div>
+
+      <!-- Título Impactante -->
+      <h3 class="text-lg font-black text-indigo-950 tracking-tight mb-2">
+        Você atingiu o limite gratuito!
+      </h3>
+
+      <!-- Mensagem Persuasiva -->
+      <p class="text-xs text-slate-600 leading-relaxed mb-6">
+        Parabéns por aproveitar o <span class="font-bold text-indigo-950">OrçaFácil.app</span>! Para continuar fechando
+        negócios sem travar e emitir <span class="font-bold text-emerald-600">orçamentos ilimitados</span> com a sua
+        marca, garanta acesso completo ao plano profissional agora mesmo.
+      </p>
+
+      <!-- Benefícios Rápidos -->
+      <div
+        class="bg-slate-50 rounded-xl p-3 text-left text-[11px] text-slate-700 space-y-2 mb-6 border border-slate-200/60">
+        <div class="flex items-center gap-2">
+          <span class="text-emerald-500 font-bold">✓</span> Orçamentos ilimitados sem restrições
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-emerald-500 font-bold">✓</span> PDF profissional pronto para o WhatsApp
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-emerald-500 font-bold">✓</span> Suporte prioritário para novos recursos
+        </div>
+      </div>
+
+      <!-- Botões de Ação -->
+      <div class="space-y-2.5">
+        <button id="btn-assinar-pro" type="button"
+          class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-xl text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/25 transition">
+          Quero Assinatura Ilimitada 🚀
+        </button>
+
+        <button id="btn-fechar-modal" type="button"
+          class="w-full py-2.5 bg-transparent hover:bg-slate-100 text-slate-400 hover:text-slate-600 font-bold rounded-xl text-xs transition">
+          Agora não
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   <script type="module" src="/src/main.js"></script>
 </body>
 

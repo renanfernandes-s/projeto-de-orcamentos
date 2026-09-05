@@ -27,6 +27,11 @@ const valorTotalEl = document.getElementById('valor-total');
 const btnGerarPdfEl = document.getElementById('btn-gerar-pdf');
 const btnEnviarWhatsEl = document.getElementById('btn-enviar-whats');
 
+// --- Seleção de Elementos do Modal PRO ---
+const modalProEl = document.getElementById('modal-pro');
+const btnAssinarProEl = document.getElementById('btn-assinar-pro');
+const btnFecharModalEl = document.getElementById('btn-fechar-modal');
+
 // --- Formatação Monetária ---
 const formatarMoeda = (valor) => {
   return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -125,7 +130,7 @@ function atualizarItem(index, field, value) {
   calcularTotais();
 }
 
-// --- Event Listeners dos Itens ---
+// --- Event Listeners dos Itens e Modal ---
 btnAddItemEl.addEventListener('click', adicionarItem);
 
 listaItensEl.addEventListener('input', (e) => {
@@ -143,7 +148,19 @@ listaItensEl.addEventListener('click', (e) => {
   }
 });
 
-// --- Integração com Supabase (Sessão do Usuário e Saldo) ---
+if (btnFecharModalEl) {
+  btnFecharModalEl.addEventListener('click', () => {
+    modalProEl.classList.add('hidden');
+  });
+}
+
+if (btnAssinarProEl) {
+  btnAssinarProEl.addEventListener('click', () => {
+    alert("Redirecionando para o ambiente de pagamento seguro Asaas... (Integração na próxima etapa)");
+  });
+}
+
+// --- Integração com Supabase (Sessão do Usuário e Saldo Seguro) ---
 async function carregarUsuario() {
   const { data: { user } } = await supabase.auth.getUser();
   currentUser = user;
@@ -151,14 +168,23 @@ async function carregarUsuario() {
   if (user) {
     if (btnGoLoginEl) btnGoLoginEl.classList.add('hidden');
     if (userInfoCardEl) userInfoCardEl.classList.remove('hidden');
-
     if (userEmailEl) userEmailEl.textContent = user.email;
 
-    const { data: profile } = await supabase
+    let { data: profile, error } = await supabase
       .from('profiles')
       .select('is_pro, pdf_count')
       .eq('id', user.id)
       .single();
+
+    if (!profile) {
+      const { data: novoPerfil } = await supabase
+        .from('profiles')
+        .insert([{ id: user.id, is_pro: false, pdf_count: 0 }])
+        .select('is_pro, pdf_count')
+        .single();
+
+      profile = novoPerfil;
+    }
 
     if (profile) {
       isProUser = !!profile.is_pro;
@@ -186,7 +212,7 @@ if (btnLogoutEl) {
   });
 }
 
-// --- Função para Gerar PDF (Com Bloqueio Seguro) ---
+// --- Função para Gerar PDF (Com Exibição do Modal Amigável) ---
 async function gerarPDF() {
   if (!currentUser) {
     alert("Você precisa fazer login para gerar o orçamento.");
@@ -195,7 +221,11 @@ async function gerarPDF() {
   }
 
   if (!isProUser && userPdfCount >= 3) {
-    alert("Você atingiu o limite de 3 PDFs gratuitos da sua conta!\n\nFaça o upgrade para o plano PRO para gerar orçamentos ilimitados.");
+    if (modalProEl) {
+      modalProEl.classList.remove('hidden');
+    } else {
+      alert("Você atingiu o limite de 3 PDFs gratuitos. Faça o upgrade para o plano PRO!");
+    }
     return;
   }
 
@@ -324,7 +354,7 @@ function enviarWhatsApp() {
   window.open(`https://wa.me/55${foneLimpo}?text=${mensagem}`, '_blank');
 }
 
-// --- Vinculação de Eventos ---
+// --- Vinculação de Eventos Finais ---
 btnGerarPdfEl.addEventListener('click', gerarPDF);
 btnEnviarWhatsEl.addEventListener('click', enviarWhatsApp);
 
