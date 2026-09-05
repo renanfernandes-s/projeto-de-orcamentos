@@ -18,8 +18,8 @@ export default async function handler(req, res) {
     }
 
     try {
-        const asaasUrl = process.env.VITE_ASAAS_URL || 'https://api.asaas.com/v3';
-        const asaasApiKey = process.env.VITE_ASAAS_API_KEY;
+        const asaasUrl = process.env.ASAAS_URL || 'https://api.asaas.com/v3';
+        const asaasApiKey = process.env.ASAAS_API_KEY;
 
         // Cria a cobrança no Asaas vinculando o ID do usuário no externalReference
         const response = await fetch(`${asaasUrl}/payments`, {
