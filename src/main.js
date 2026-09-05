@@ -12,6 +12,13 @@ let itens = [
 ];
 
 // --- Seleção de Elementos do DOM ---
+const userAreaEl = document.getElementById('user-area');
+const btnGoLoginEl = document.getElementById('btn-go-login');
+const userInfoCardEl = document.getElementById('user-info-card');
+const userEmailEl = document.getElementById('user-email');
+const proBadgeEl = document.getElementById('pro-badge');
+const btnLogoutEl = document.getElementById('btn-logout');
+
 const listaItensEl = document.getElementById('lista-itens');
 const btnAddItemEl = document.getElementById('btn-add-item');
 const valorSubtotalEl = document.getElementById('valor-subtotal');
@@ -19,9 +26,6 @@ const valorTotalEl = document.getElementById('valor-total');
 
 const btnGerarPdfEl = document.getElementById('btn-gerar-pdf');
 const btnEnviarWhatsEl = document.getElementById('btn-enviar-whats');
-
-const userEmailEl = document.getElementById('user-email');
-const proBadgeEl = document.getElementById('pro-badge');
 
 // --- Formatação Monetária ---
 const formatarMoeda = (valor) => {
@@ -145,10 +149,10 @@ async function carregarUsuario() {
   currentUser = user;
 
   if (user) {
-    const userInfoCard = document.getElementById('user-info-card');
-    if (userInfoCard) userInfoCard.classList.remove('hidden');
+    if (btnGoLoginEl) btnGoLoginEl.classList.add('hidden');
+    if (userInfoCardEl) userInfoCardEl.classList.remove('hidden');
 
-    userEmailEl.textContent = user.email;
+    if (userEmailEl) userEmailEl.textContent = user.email;
 
     const { data: profile } = await supabase
       .from('profiles')
@@ -160,25 +164,36 @@ async function carregarUsuario() {
       isProUser = !!profile.is_pro;
       userPdfCount = profile.pdf_count || 0;
 
-      if (isProUser) {
-        proBadgeEl.classList.remove('hidden');
-      } else {
-        proBadgeEl.classList.add('hidden');
+      if (proBadgeEl) {
+        if (isProUser) {
+          proBadgeEl.classList.remove('hidden');
+        } else {
+          proBadgeEl.classList.add('hidden');
+        }
       }
     }
+  } else {
+    if (btnGoLoginEl) btnGoLoginEl.classList.remove('hidden');
+    if (userInfoCardEl) userInfoCardEl.classList.add('hidden');
   }
 }
 
-// --- 1. Função Apenas para Gerar PDF (Com Bloqueio Seguro) ---
+// --- Função de Logout ---
+if (btnLogoutEl) {
+  btnLogoutEl.addEventListener('click', async () => {
+    await supabase.auth.signOut();
+    window.location.reload();
+  });
+}
+
+// --- Função para Gerar PDF (Com Bloqueio Seguro) ---
 async function gerarPDF() {
-  // 1. Exige que o usuário esteja logado
   if (!currentUser) {
     alert("Você precisa fazer login para gerar o orçamento.");
     window.location.href = '/login.html';
     return;
   }
 
-  // 2. Trava de 3 PDFs para não-PRO no Banco de Dados
   if (!isProUser && userPdfCount >= 3) {
     alert("Você atingiu o limite de 3 PDFs gratuitos da sua conta!\n\nFaça o upgrade para o plano PRO para gerar orçamentos ilimitados.");
     return;
@@ -274,7 +289,6 @@ async function gerarPDF() {
   try {
     await html2pdf().set(opt).from(container).save();
 
-    // Incrementa no Supabase apenas para usuários Free
     if (!isProUser) {
       userPdfCount += 1;
       await supabase
@@ -283,7 +297,6 @@ async function gerarPDF() {
         .eq('id', currentUser.id);
     }
 
-    // Libera o botão do WhatsApp
     btnEnviarWhatsEl.classList.remove('hidden');
     btnGerarPdfEl.textContent = "✓ PDF BAIXADO (Gerar Novamente)";
   } catch (err) {
@@ -294,7 +307,7 @@ async function gerarPDF() {
   }
 }
 
-// --- 2. Função Apenas para Abrir o WhatsApp ---
+// --- Função para Abrir WhatsApp ---
 function enviarWhatsApp() {
   const clienteNome = document.getElementById('cliente-nome').value.trim();
   const clienteFone = document.getElementById('cliente-fone').value.trim();
