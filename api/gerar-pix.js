@@ -21,7 +21,19 @@ export default async function handler(req, res) {
         const asaasUrl = process.env.ASAAS_URL || 'https://api.asaas.com/v3';
         const asaasApiKey = process.env.ASAAS_API_KEY;
 
-        // 1. Busca ou cria o cliente no Asaas pelo e-mail
+        // 1. Busca os dados do usuário no Supabase (ex: tabela 'profiles' onde fica o CPF)
+        let userCpf = '02497171017'; // Fallback caso não encontre
+        const { data: profileData, error: profileError } = await supabaseAdmin
+            .from('profiles') // Ajuste para o nome exato da sua tabela de perfis se for diferente
+            .select('cpf, cpf_cnpj')
+            .eq('id', userId)
+            .single();
+
+        if (!profileError && profileData) {
+            userCpf = profileData.cpf || profileData.cpf_cnpj || userCpf;
+        }
+
+        // 2. Busca ou cria o cliente no Asaas pelo e-mail
         const customerResponse = await fetch(`${asaasUrl}/customers?email=${encodeURIComponent(userEmail || 'cliente@orcafacil.com')}`, {
             method: 'GET',
             headers: {
@@ -35,7 +47,7 @@ export default async function handler(req, res) {
         if (customerData.data && customerData.data.length > 0) {
             customerId = customerData.data[0].id;
         } else {
-            // Se o cliente não existe, cria um novo
+            // Se o cliente não existe, cria um novo passando o CPF do Supabase
             const newCustomerResponse = await fetch(`${asaasUrl}/customers`, {
                 method: 'POST',
                 headers: {
@@ -45,6 +57,7 @@ export default async function handler(req, res) {
                 body: JSON.stringify({
                     name: userEmail ? userEmail.split('@')[0] : 'Cliente OrçaFácil',
                     email: userEmail || 'cliente@orcafacil.com',
+                    cpfCnpj: userCpf,
                     externalReference: userId
                 })
             });
@@ -57,7 +70,7 @@ export default async function handler(req, res) {
             customerId = newCustomer.id;
         }
 
-        // 2. Cria a cobrança no Asaas vinculando o cliente correto
+        // 3. Cria a cobrança no Asaas vinculando o cliente correto
         const response = await fetch(`${asaasUrl}/payments`, {
             method: 'POST',
             headers: {
@@ -81,7 +94,7 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'Erro ao gerar cobrança no Asaas', details: paymentData });
         }
 
-        // 3. Busca os dados do QR Code da cobrança criada
+        // 4. Busca os dados do QR Code da cobrança criada
         const qrResponse = await fetch(`${asaasUrl}/payments/${paymentData.id}/pixQrCode`, {
             method: 'GET',
             headers: {
