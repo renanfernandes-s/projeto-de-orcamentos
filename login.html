@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Entrar ou Cadastrar | Use OrçaFácilAPP</title>
+    <link rel="stylesheet" href="/src/style.css" />
+</head>
+
+<body class="bg-slate-100 font-sans text-slate-800 antialiased min-h-screen flex items-center justify-center p-4">
+
+    <div class="max-w-md w-full bg-white rounded-2xl shadow-lg border border-slate-200 p-6 space-y-6">
+
+        <!-- Cabeçalho -->
+        <div class="text-center">
+            <h1 class="text-2xl font-black text-indigo-950">
+                Use <span class="text-emerald-500">OrçaFácil</span><span
+                    class="text-xs text-slate-400 font-normal">.app</span>
+            </h1>
+            <p class="text-xs text-slate-500 mt-1">Acesse sua conta para criar e gerenciar orçamentos</p>
+        </div>
+
+        <!-- Formulário -->
+        <form id="auth-form" class="space-y-4">
+            <div>
+                <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">E-mail</label>
+                <input type="email" id="auth-email" required
+                    class="w-full text-sm p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                    placeholder="seu@email.com">
+            </div>
+
+            <div>
+                <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Senha</label>
+                <input type="password" id="auth-password" required minlength="6"
+                    class="w-full text-sm p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                    placeholder="••••••••">
+            </div>
+
+            <!-- Botões de Ação -->
+            <div class="space-y-2 pt-2">
+                <button type="submit" id="btn-login"
+                    class="w-full py-3 bg-indigo-950 hover:bg-indigo-900 text-white font-bold rounded-xl shadow-md text-sm transition">
+                    Entrar
+                </button>
+
+                <button type="button" id="btn-signup"
+                    class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-sm transition border border-slate-200">
+                    Criar Nova Conta
+                </button>
+            </div>
+        </form>
+
+        <div class="text-center">
+            <a href="/" class="text-xs text-slate-400 hover:text-slate-600 underline">← Voltar para a página inicial</a>
+        </div>
+
+    </div>
+
+    <script type="module" src="/src/login.js"></script>
+</body>
+
+</html>
