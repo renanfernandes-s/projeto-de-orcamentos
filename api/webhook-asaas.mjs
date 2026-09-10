@@ -5,7 +5,7 @@ const supabaseAdmin = createClient(
     process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-const ASAAS_BASE_URL = process.env.ASAAS_URL || 'https://www.asaas.com/api/v3';
+const ASAAS_BASE_URL = process.env.ASAAS_URL || 'https://api.asaas.com/v3';
 
 // REGRAS DE NEGÓCIO RIGOROSAS PARA LIBERAÇÃO DO PLANO
 const PLANO_PRO_VALOR_ESPERADO = 6.00;
@@ -67,7 +67,7 @@ export default async function handler(req, res) {
 
             if (!targetUserId || !customerId) {
                 console.error('❌ Referência de usuário ou cliente ausente na cobrança validada.');
-                return res.status(400).json({ error: 'Missing user reference or customer ID' });
+                return res.status(200).json({ received: true, ignored: true });
             }
 
             if (!isValorCorreto || !isBillingTypePix || !isDescricaoCorreta) {
@@ -77,14 +77,14 @@ export default async function handler(req, res) {
                     billingType: verifiedPayment.billingType,
                     description: verifiedPayment.description
                 });
-                return res.status(400).json({ error: 'Payment criteria validation failed' });
+                // Divergência de contrato não será corrigida por um retry do Asaas.
+                return res.status(200).json({ received: true, ignored: true });
             }
 
             // 4. ATUALIZAÇÃO SEGURA DO STATUS PRO NO BANCO DE DADOS
             const { error } = await supabaseAdmin
                 .from('profiles')
-                .update({ is_pro: true })
-                .eq('id', targetUserId);
+                .upsert({ id: targetUserId, is_pro: true }, { onConflict: 'id' });
 
             if (error) {
                 console.error('❌ Erro ao atualizar status PRO no Supabase:', error);
