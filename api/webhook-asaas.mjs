@@ -1,14 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseAdmin = createClient(
-    process.env.SUPABASE_URL,
+    process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
 const ASAAS_BASE_URL = process.env.ASAAS_URL || 'https://www.asaas.com/api/v3';
 
 // REGRAS DE NEGÓCIO RIGOROSAS PARA LIBERAÇÃO DO PLANO
-const PLANO_PRO_VALOR_ESPERADO = 14.90;
+const PLANO_PRO_VALOR_ESPERADO = 6.00;
 const PLANO_PRO_DESCRICAO_ESPERADA = 'Assinatura OrçaFácilApp PRO';
 
 export default async function handler(req, res) {
