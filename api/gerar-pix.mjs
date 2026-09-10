@@ -8,7 +8,9 @@ if (!supabaseUrl || !supabaseServiceKey) {
 }
 
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
-const ASAAS_BASE_URL = process.env.ASAAS_URL || 'https://sandbox.asaas.com/api/v3';
+
+// Ajustado para o ambiente oficial de PRODUÇÃO do Asaas
+const ASAAS_BASE_URL = process.env.ASAAS_URL || 'https://www.asaas.com/api/v3';
 const PLANO_PRO_VALOR = 14.90;
 const PLANO_PRO_DESCRICAO = 'Assinatura OrçaFácilApp PRO';
 
