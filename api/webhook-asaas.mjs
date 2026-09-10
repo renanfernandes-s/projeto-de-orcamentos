@@ -8,7 +8,7 @@ const supabaseAdmin = createClient(
 const ASAAS_BASE_URL = process.env.ASAAS_URL || 'https://api.asaas.com/v3';
 
 // REGRAS DE NEGÓCIO RIGOROSAS PARA LIBERAÇÃO DO PLANO
-const PLANO_PRO_VALOR_ESPERADO = 6.00;
+const PLANO_PRO_VALOR_ESPERADO = 14.90;
 const PLANO_PRO_DESCRICAO_ESPERADA = 'Assinatura OrçaFácilApp PRO';
 
 export default async function handler(req, res) {

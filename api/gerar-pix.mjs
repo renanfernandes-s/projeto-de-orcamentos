@@ -11,7 +11,7 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
 // Endpoint oficial da API de produção do Asaas.
 const ASAAS_BASE_URL = process.env.ASAAS_URL || 'https://api.asaas.com/v3';
-const PLANO_PRO_VALOR = 6.00;
+const PLANO_PRO_VALOR = 14.90;
 const PLANO_PRO_DESCRICAO = 'Assinatura OrçaFácilApp PRO';
 
 export default async function handler(req, res) {
