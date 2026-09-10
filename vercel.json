@@ -4,5 +4,10 @@
             "source": "/api-asaas/:path*",
             "destination": "https://api.asaas.com/v3/:path*"
         }
-    ]
+    ],
+    "functions": {
+        "api/*.js": {
+            "runtime": "nodejs20.x"
+        }
+    }
 }
