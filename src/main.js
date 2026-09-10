@@ -195,8 +195,8 @@ if (btnAssinarProEl) {
 
       const prestadorNome = document.getElementById('prestador-nome')?.value.trim() || currentUser.email;
 
-      // 2. Faz a chamada autenticada via Authorization Bearer Token
-      const response = await fetch('/api/gerar-pix', {
+      // 2. Faz a chamada autenticada direcionada para a extensão .mjs
+      const response = await fetch('/api/gerar-pix.mjs', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
