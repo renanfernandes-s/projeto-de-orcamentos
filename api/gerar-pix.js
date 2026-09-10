@@ -1,132 +1,147 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseAdmin = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+// Leitura das variáveis sem fallbacks inseguros ou logs de depuração
+const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+// Validação prévia de variáveis críticas do servidor
+if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error('Configuração do servidor incompleta: Chaves do Supabase ausentes.');
+}
+
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+
+// URL dinâmica para suportar Sandbox e Produção
+const ASAAS_BASE_URL = process.env.ASAAS_URL || 'https://sandbox.asaas.com/api/v3';
+
+// VALOR E DESCRIÇÃO FIXOS DEFINIDOS EXCLUSIVAMENTE NO BACKEND
+const PLANO_PRO_VALOR = 14.90;
+const PLANO_PRO_DESCRICAO = 'Assinatura OrçaFácilApp PRO';
 
 export default async function handler(req, res) {
-    if (req.method !== 'POST') {
-        res.setHeader('Allow', 'POST');
-        return res.status(405).end('Method Not Allowed');
-    }
 
-    const { userId, userEmail, cpf } = req.body;
+    // ... o restante da lógica da função handler permanece exatamente igual
 
-    if (!userId) {
-        return res.status(400).json({ error: 'Usuário não identificado' });
-    }
+    export default async function handler(req, res) {
+        if (req.method !== 'POST') {
+            res.setHeader('Allow', 'POST');
+            return res.status(405).end('Method Not Allowed');
+        }
 
-    if (!cpf) {
-        return res.status(400).json({ error: 'O CPF é obrigatório para gerar o pagamento.' });
-    }
-
-    try {
-        const asaasUrl = process.env.ASAAS_URL || 'https://api.asaas.com/v3';
-        const asaasApiKey = process.env.ASAAS_API_KEY;
-
-        // Limpa o CPF (remove pontos e traços)
-        const cleanCpf = cpf.replace(/\D/g, '');
-
-        // 1. Salva ou atualiza o CPF na tabela 'profiles' do Supabase para guardar o dado do cliente
-        await supabaseAdmin
-            .from('profiles')
-            .upsert({ id: userId, email: userEmail, cpf: cleanCpf }, { onConflict: 'id' });
-
-        // 2. Busca ou cria o cliente no Asaas pelo e-mail ou CPF
-        const customerResponse = await fetch(`${asaasUrl}/customers?email=${encodeURIComponent(userEmail || 'cliente@orcafacil.com')}`, {
-            method: 'GET',
-            headers: {
-                'access_token': asaasApiKey
+        try {
+            // 1. VALIDAÇÃO DE AUTENTICAÇÃO DO USUÁRIO (JWT DO SUPABASE)
+            const authHeader = req.headers.authorization;
+            if (!authHeader || !authHeader.startsWith('Bearer ')) {
+                return res.status(401).json({ error: 'Token de autenticação não fornecido.' });
             }
-        });
 
-        const customerData = await customerResponse.json();
-        let customerId;
+            const token = authHeader.split(' ')[1];
+            const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
 
-        if (customerData.data && customerData.data.length > 0) {
-            customerId = customerData.data[0].id;
+            if (authError || !user) {
+                return res.status(401).json({ error: 'Usuário não autenticado ou sessão inválida.' });
+            }
 
-            // Opcional: Atualiza o CPF do cliente existente no Asaas se necessário
-            await fetch(`${asaasUrl}/customers/${customerId}`, {
-                method: 'POST', // No Asaas, atualizações parciais costumam usar POST ou PUT dependendo da rota, mas vamos focar em garantir que ele exista com o CPF
-                headers: {
-                    'Content-Type': 'application/json',
-                    'access_token': asaasApiKey
-                },
-                body: JSON.stringify({ cpfCnpj: cleanCpf })
-            }).catch(() => { }); // silencia erro caso a atualização direta falhe
+            const userId = user.id;
+            const userEmail = user.email;
 
-        } else {
-            // Se o cliente não existe, cria um novo passando o CPF informado
-            const newCustomerResponse = await fetch(`${asaasUrl}/customers`, {
+            // Ignoramos qualquer parâmetro 'value' vindo do req.body por segurança
+            const { cpfCnpj, name } = req.body;
+
+            if (!cpfCnpj || !name) {
+                return res.status(400).json({ error: 'CPF/CNPJ e Nome são obrigatórios.' });
+            }
+
+            // 2. ATUALIZA/CRIA O PERFIL DO USUÁRIO
+            /*
+            const { error: profileError } = await supabaseAdmin
+                .from('profiles')
+                .upsert({
+                    id: userId,
+                    email: userEmail,
+                    cpf_cnpj: cpfCnpj,
+                    full_name: name,
+                    updated_at: new Date().toISOString()
+                });
+    
+            if (profileError) {
+                console.error('Erro ao atualizar perfil do usuário:', profileError);
+                return res.status(500).json({ error: 'Erro ao salvar informações do perfil.' });
+            }
+            */
+
+            // 3. CRIAÇÃO/BUSCA DO CLIENTE NO ASAAS
+            let customerId;
+            const searchCustomerRes = await fetch(`${ASAAS_BASE_URL}/customers?cpfCnpj=${cpfCnpj}`, {
+                method: 'GET',
+                headers: { 'access_token': process.env.ASAAS_API_KEY }
+            });
+            const searchCustomerData = await searchCustomerRes.json();
+
+            if (searchCustomerData.data && searchCustomerData.data.length > 0) {
+                customerId = searchCustomerData.data[0].id;
+            } else {
+                const createCustomerRes = await fetch(`${ASAAS_BASE_URL}/customers`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'access_token': process.env.ASAAS_API_KEY
+                    },
+                    body: JSON.stringify({
+                        name,
+                        cpfCnpj,
+                        email: userEmail,
+                        externalReference: userId
+                    })
+                });
+                const newCustomer = await createCustomerRes.json();
+
+                if (!createCustomerRes.ok) {
+                    return res.status(400).json({ error: newCustomer.errors?.[0]?.description || 'Erro ao criar cliente no Asaas.' });
+                }
+                customerId = newCustomer.id;
+            }
+
+            // 4. CRIAÇÃO DA COBRANÇA PIX COM VALOR IMUTÁVEL
+            const paymentRes = await fetch(`${ASAAS_BASE_URL}/payments`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'access_token': asaasApiKey
+                    'access_token': process.env.ASAAS_API_KEY
                 },
                 body: JSON.stringify({
-                    name: userEmail ? userEmail.split('@')[0] : 'Cliente OrçaFácil',
-                    email: userEmail || 'cliente@orcafacil.com',
-                    cpfCnpj: cleanCpf,
+                    customer: customerId,
+                    billingType: 'PIX',
+                    value: PLANO_PRO_VALOR, // VALOR FIXO CONTROLADO
+                    dueDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+                    description: PLANO_PRO_DESCRICAO,
                     externalReference: userId
                 })
             });
 
-            const newCustomer = await newCustomerResponse.json();
-            if (!newCustomerResponse.ok) {
-                console.error('Erro ao criar cliente Asaas:', newCustomer);
-                return res.status(400).json({ error: 'Erro ao cadastrar cliente no gateway de pagamento', details: newCustomer });
+            const paymentData = await paymentRes.json();
+
+            if (!paymentRes.ok) {
+                return res.status(400).json({ error: paymentData.errors?.[0]?.description || 'Erro ao criar cobrança no Asaas.' });
             }
-            customerId = newCustomer.id;
+
+            // 5. OBTENÇÃO DO QR CODE PIX
+            const qrCodeRes = await fetch(`${ASAAS_BASE_URL}/payments/${paymentData.id}/pixQrCode`, {
+                method: 'GET',
+                headers: { 'access_token': process.env.ASAAS_API_KEY }
+            });
+
+            const qrCodeData = await qrCodeRes.json();
+
+            return res.status(200).json({
+                paymentId: paymentData.id,
+                encodedImage: qrCodeData.encodedImage,
+                payload: qrCodeData.payload,
+                expirationDate: qrCodeData.expirationDate
+            });
+
+        } catch (err) {
+            console.error('Erro na rota /api/gerar-pix:', err.message);
+            return res.status(500).json({ error: 'Erro interno ao processar Pix.' });
         }
-
-        // 3. Cria a cobrança no Asaas vinculando o cliente correto
-        const response = await fetch(`${asaasUrl}/payments`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'access_token': asaasApiKey
-            },
-            body: JSON.stringify({
-                billingType: 'PIX',
-                value: 14.90,
-                dueDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-                description: 'Assinatura Mensal - OrçaFácil PRO',
-                externalReference: userId,
-                customer: customerId
-            })
-        });
-
-        const paymentData = await response.json();
-
-        if (!response.ok) {
-            console.error('Erro Asaas:', paymentData);
-            return res.status(400).json({ error: 'Erro ao gerar cobrança no Asaas', details: paymentData });
-        }
-
-        // 4. Busca os dados do QR Code da cobrança criada
-        const qrResponse = await fetch(`${asaasUrl}/payments/${paymentData.id}/pixQrCode`, {
-            method: 'GET',
-            headers: {
-                'access_token': asaasApiKey
-            }
-        });
-
-        const qrData = await qrResponse.json();
-
-        if (!qrResponse.ok) {
-            return res.status(400).json({ error: 'Erro ao gerar QR Code Pix' });
-        }
-
-        return res.status(200).json({
-            paymentId: paymentData.id,
-            encodedImage: qrData.encodedImage,
-            payload: qrData.payload
-        });
-
-    } catch (err) {
-        console.error('Erro interno:', err);
-        return res.status(500).json({ error: 'Erro interno ao processar pagamento' });
     }
-}

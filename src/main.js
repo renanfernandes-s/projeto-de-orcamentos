@@ -186,13 +186,25 @@ if (btnAssinarProEl) {
     btnAssinarProEl.textContent = "Gerando Pix seguro...";
 
     try {
+      // 1. Obtém a sessão ativa com o JWT Token do usuário
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session) {
+        throw new Error("Sessão expirada. Por favor, faça login novamente.");
+      }
+
+      const prestadorNome = document.getElementById('prestador-nome')?.value.trim() || currentUser.email;
+
+      // 2. Faz a chamada autenticada via Authorization Bearer Token
       const response = await fetch('/api/gerar-pix', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
         body: JSON.stringify({
-          userId: currentUser.id,
-          userEmail: currentUser.email,
-          cpf: cpfInformado
+          cpfCnpj: cpfInformado.replace(/\D/g, ''),
+          name: prestadorNome
         })
       });
 

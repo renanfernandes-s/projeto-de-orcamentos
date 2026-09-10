@@ -2,6 +2,7 @@
 .env
 .env.*
 !.env.example
+.env.local
 
 # Dependências
 node_modules/
@@ -30,3 +31,5 @@ lerna-debug.log*
 *.njsproj
 *.sln
 *.sw?
+.vercel
+.env*
