@@ -7,9 +7,7 @@ let currentUser = null;
 let isProUser = false;
 let userPdfCount = 0;
 
-let itens = [
-  { id: Date.now(), descricao: 'Serviço Exemplo', qtd: 1, preco: 150.00 }
-];
+let itens = [];
 
 // --- Seleção de Elementos do DOM ---
 const userAreaEl = document.getElementById('user-area');
@@ -57,52 +55,69 @@ function calcularTotais() {
 function renderizarTabela() {
   listaItensEl.innerHTML = '';
 
+  if (itens.length === 0) {
+    calcularTotais();
+    return;
+  }
+
   itens.forEach((item, index) => {
     const tr = document.createElement('tr');
-    tr.className = 'border-b border-slate-100 hover:bg-slate-50/50 transition';
+    tr.className = 'border-b border-gray-100';
 
-    tr.innerHTML = `
-      <td class="py-2 pr-2">
-        <input 
-          type="text" 
-          value="${item.descricao}" 
-          data-index="${index}" 
-          data-field="descricao"
-          class="item-input w-full text-xs bg-transparent border-b border-transparent focus:border-indigo-500 outline-none font-medium text-slate-700" 
-          placeholder="Descrição do item"
-        >
-      </td>
-      <td class="py-2 px-2 text-center w-12">
-        <input 
-          type="number" 
-          min="1" 
-          value="${item.qtd}" 
-          data-index="${index}" 
-          data-field="qtd"
-          class="item-input w-full text-xs text-center bg-transparent border-b border-transparent focus:border-indigo-500 outline-none font-medium text-slate-700"
-        >
-      </td>
-      <td class="py-2 pl-2 text-right w-24">
-        <input 
-          type="number" 
-          step="0.01" 
-          min="0" 
-          value="${item.preco}" 
-          data-index="${index}" 
-          data-field="preco"
-          class="item-input w-full text-xs text-right bg-transparent border-b border-transparent focus:border-indigo-500 outline-none font-semibold text-slate-800"
-        >
-      </td>
-      <td class="py-2 pl-1 text-center w-6">
-        <button 
-          type="button" 
-          data-index="${index}" 
-          class="btn-remove text-slate-300 hover:text-red-500 font-bold text-sm transition"
-          title="Remover Item"
-        >&times;</button>
-      </td>
-    `;
+    // 1. Célula de Descrição
+    const tdDesc = document.createElement('td');
+    tdDesc.className = 'p-2';
+    const inputDesc = document.createElement('input');
+    inputDesc.type = 'text';
+    inputDesc.value = item.descricao || '';
+    inputDesc.placeholder = 'Descrição do serviço ou item';
+    inputDesc.dataset.index = index;
+    inputDesc.dataset.field = 'descricao';
+    inputDesc.className = 'item-input w-full p-2 border rounded';
+    tdDesc.appendChild(inputDesc);
 
+    // 2. Célula de Quantidade
+    const tdQtd = document.createElement('td');
+    tdQtd.className = 'p-2';
+    const inputQtd = document.createElement('input');
+    inputQtd.type = 'number';
+    inputQtd.min = '1';
+    inputQtd.value = item.qtd;
+    inputQtd.dataset.index = index;
+    inputQtd.dataset.field = 'qtd';
+    inputQtd.className = 'item-input w-20 p-2 border rounded text-center';
+    tdQtd.appendChild(inputQtd);
+
+    // 3. Célula de Preço
+    const tdPreco = document.createElement('td');
+    tdPreco.className = 'p-2';
+    const inputPreco = document.createElement('input');
+    inputPreco.type = 'number';
+    inputPreco.step = '0.01';
+    inputPreco.min = '0';
+    inputPreco.value = item.preco;
+    inputPreco.dataset.index = index;
+    inputPreco.dataset.field = 'preco';
+    inputPreco.className = 'item-input w-28 p-2 border rounded text-right';
+    tdPreco.appendChild(inputPreco);
+
+    // 4. Célula de Ação (Remover)
+    const tdAcao = document.createElement('td');
+    tdAcao.className = 'p-2 text-center';
+    const btnRemove = document.createElement('button');
+    btnRemove.type = 'button';
+    btnRemove.textContent = '🗑️';
+    btnRemove.dataset.index = index;
+    btnRemove.className = 'btn-remove text-red-500 hover:text-red-700 p-1';
+    tdAcao.appendChild(btnRemove);
+
+    // Anexa as 4 células (td) na linha (tr)
+    tr.appendChild(tdDesc);
+    tr.appendChild(tdQtd);
+    tr.appendChild(tdPreco);
+    tr.appendChild(tdAcao);
+
+    // Anexa a linha (tr) no tbody/container da tabela (listaItensEl)
     listaItensEl.appendChild(tr);
   });
 
@@ -118,15 +133,13 @@ function adicionarItem() {
     preco: 0.00
   });
   renderizarTabela();
+  calcularTotais();
 }
 
 function removerItem(index) {
-  if (itens.length === 1) {
-    alert("O orçamento precisa ter pelo menos 1 item.");
-    return;
-  }
   itens.splice(index, 1);
   renderizarTabela();
+  calcularTotais();
 }
 
 function atualizarItem(index, field, value) {
