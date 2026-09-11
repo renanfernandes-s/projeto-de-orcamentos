@@ -10,6 +10,7 @@ let userPdfCount = 0;
 let itens = [];
 
 // --- Seleção de Elementos do DOM ---
+const observacoesEl = document.getElementById('observacoes');
 const userAreaEl = document.getElementById('user-area');
 const btnGoLoginEl = document.getElementById('btn-go-login');
 const userInfoCardEl = document.getElementById('user-info-card');
@@ -43,6 +44,15 @@ const inputPixCopiaColaEl = document.getElementById('pix-copia-cola');
 // --- Formatação Monetária ---
 const formatarMoeda = (valor) => {
   return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+};
+
+const escaparHTML = (str) => {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 };
 
 // --- Renderização e Cálculos ---
@@ -361,11 +371,13 @@ async function gerarPDF() {
     }
     return;
   }
-
-  const prestadorNome = document.getElementById('prestador-nome').value.trim();
-  const prestadorFone = document.getElementById('prestador-fone').value.trim();
-  const clienteNome = document.getElementById('cliente-nome').value.trim();
-  const clienteFone = document.getElementById('cliente-fone').value.trim();
+  // --- Coleta de Dados do Formulário ---
+  const prestadorNome = escaparHTML(document.getElementById('prestador-nome').value.trim());
+  const prestadorFone = escaparHTML(document.getElementById('prestador-fone').value.trim());
+  const clienteNome = escaparHTML(document.getElementById('cliente-nome').value.trim());
+  const clienteFone = escaparHTML(document.getElementById('cliente-fone').value.trim());
+  const observacoes = escaparHTML(observacoesEl?.value.trim() || '');
+  const clienteNomeOriginal = document.getElementById('cliente-nome').value.trim();
 
   if (!prestadorNome || !clienteNome) {
     alert("Por favor, preencha o seu nome e o nome do cliente.");
@@ -415,7 +427,7 @@ async function gerarPDF() {
       <tbody class="divide-y divide-slate-100">
         ${itens.map(item => `
           <tr>
-            <td class="py-3 font-medium text-slate-700">${item.descricao || 'Item sem descrição'}</td>
+            <td class="py-3 font-medium text-slate-700">${escaparHTML(item.descricao || 'Item sem descrição')}</td>
             <td class="py-3 text-center text-slate-600">${item.qtd}</td>
             <td class="py-3 text-right text-slate-600">${formatarMoeda(item.preco)}</td>
             <td class="py-3 text-right font-semibold text-slate-800">${formatarMoeda(item.qtd * item.preco)}</td>
@@ -431,6 +443,15 @@ async function gerarPDF() {
       </div>
     </div>
 
+    ${observacoes ? `
+      <div class="mb-8 rounded-lg border border-slate-200 bg-slate-50 p-4 text-xs">
+        <p class="mb-1 font-bold uppercase tracking-wider text-slate-400">
+          Observações / Condições Gerais
+        </p>
+        <p class="whitespace-pre-line text-slate-700">${observacoes}</p>
+      </div>
+    ` : ''}
+
     <div class="text-center pt-6 border-t border-slate-100 text-[10px] text-slate-400">
       <p>Este orçamento tem validade de 15 dias. Gerado por Use OrçaFácilAPP.</p>
     </div>
@@ -438,7 +459,7 @@ async function gerarPDF() {
 
   const opt = {
     margin: 10,
-    filename: `orcamento-${clienteNome.toLowerCase().replace(/\s+/g, '-')}.pdf`,
+    filename: `orcamento-${clienteNomeOriginal.toLowerCase().replace(/\s+/g, '-')}.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
     html2canvas: { scale: 2, useCORS: true },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
