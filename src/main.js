@@ -6,6 +6,9 @@ import { supabase, atualizarSenha } from './supabase.js';
 let currentUser = null;
 let isProUser = false;
 let userPdfCount = 0;
+let pdfWorkerAtual = null;
+let pdfPreviewUrlAtual = null;
+let nomeArquivoAtual = 'orcamento.pdf';
 
 let itens = [];
 
@@ -25,6 +28,63 @@ const valorTotalEl = document.getElementById('valor-total');
 
 const btnGerarPdfEl = document.getElementById('btn-gerar-pdf');
 const btnEnviarWhatsEl = document.getElementById('btn-enviar-whats');
+const modalPreviewEl = document.getElementById('modal-preview');
+const iframePdfPreviewEl = document.getElementById('iframe-pdf-preview');
+const btnFecharPreviewEl = document.getElementById('btn-fechar-preview');
+const btnBaixarPreviewEl = document.getElementById('btn-baixar-preview');
+const btnCancelarPreviewEl = document.getElementById('btn-cancelar-preview');
+
+function fecharPreview() {
+  modalPreviewEl?.classList.add('hidden');
+  modalPreviewEl?.classList.remove('flex');
+
+  if (iframePdfPreviewEl) {
+    iframePdfPreviewEl.src = '';
+  }
+
+  if (pdfPreviewUrlAtual) {
+    URL.revokeObjectURL(pdfPreviewUrlAtual);
+    pdfPreviewUrlAtual = null;
+  }
+
+  pdfWorkerAtual = null;
+}
+
+async function baixarPreview() {
+  if (!pdfWorkerAtual || !btnBaixarPreviewEl) {
+    return;
+  }
+
+  btnBaixarPreviewEl.disabled = true;
+  btnBaixarPreviewEl.textContent = 'Baixando...';
+
+  try {
+    await pdfWorkerAtual.save();
+
+    if (!isProUser && currentUser) {
+      userPdfCount += 1;
+
+      await supabase
+        .from('profiles')
+        .update({ pdf_count: userPdfCount })
+        .eq('id', currentUser.id);
+    }
+
+    btnEnviarWhatsEl?.classList.remove('hidden');
+    fecharPreview();
+    btnGerarPdfEl.textContent = '✓ PDF BAIXADO (Gerar Novamente)';
+  } catch (err) {
+    console.error('Erro ao baixar PDF:', err);
+    alert('Ocorreu um erro ao baixar o PDF.');
+  } finally {
+    btnBaixarPreviewEl.disabled = false;
+    btnBaixarPreviewEl.textContent = 'Baixar PDF';
+  }
+}
+
+btnFecharPreviewEl?.addEventListener('click', fecharPreview);
+btnCancelarPreviewEl?.addEventListener('click', fecharPreview);
+btnBaixarPreviewEl?.addEventListener('click', baixarPreview);
 
 // --- Seleção de Elementos do Modal PRO e Pix ---
 const modalProEl = document.getElementById('modal-pro');
@@ -466,25 +526,44 @@ async function gerarPDF() {
   };
 
   try {
-    await html2pdf().set(opt).from(container).save();
+    nomeArquivoAtual = opt.filename;
 
-    if (!isProUser) {
-      userPdfCount += 1;
-      await supabase
-        .from('profiles')
-        .update({ pdf_count: userPdfCount })
-        .eq('id', currentUser.id);
+    pdfWorkerAtual = html2pdf()
+      .set(opt)
+      .from(container);
+
+    const pdfBlob = await pdfWorkerAtual.outputPdf('blob');
+
+    if (pdfPreviewUrlAtual) {
+      URL.revokeObjectURL(pdfPreviewUrlAtual);
     }
 
-    btnEnviarWhatsEl.classList.remove('hidden');
-    btnGerarPdfEl.textContent = "✓ PDF BAIXADO (Gerar Novamente)";
+    pdfPreviewUrlAtual = URL.createObjectURL(pdfBlob);
+
+    if (iframePdfPreviewEl) {
+      iframePdfPreviewEl.src = pdfPreviewUrlAtual;
+    }
+
+    if (modalPreviewEl) {
+      modalPreviewEl.classList.remove('hidden');
+      modalPreviewEl.classList.add('flex');
+    }
+
+    btnGerarPdfEl.textContent = '👁️ Pré-visualizar PDF novamente';
   } catch (err) {
-    console.error("Erro ao gerar PDF:", err);
-    alert("Ocorreu um erro ao gerar o PDF.");
+    console.error('Erro ao gerar pré-visualização:', err);
+    alert('Ocorreu um erro ao gerar a pré-visualização do PDF.');
+
   } finally {
     btnGerarPdfEl.disabled = false;
   }
 }
+//Liberar a URL do objeto Blob quando a janela for fechada ou recarregada
+window.addEventListener('beforeunload', () => {
+  if (pdfPreviewUrlAtual) {
+    URL.revokeObjectURL(pdfPreviewUrlAtual);
+  }
+});
 
 // --- Função para Abrir WhatsApp ---
 function enviarWhatsApp() {

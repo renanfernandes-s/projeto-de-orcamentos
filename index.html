@@ -147,7 +147,7 @@
     <div class="space-y-2">
       <button id="btn-gerar-pdf" type="button"
         class="w-full py-3.5 bg-indigo-950 hover:bg-indigo-900 text-white font-bold rounded-xl shadow-md text-sm uppercase tracking-wide transition flex items-center justify-center gap-2">
-        <span>📄 1. Gerar e Baixar PDF</span>
+        <span>📄 1. Pré-Visualizar PDF</span>
       </button>
 
       <button id="btn-enviar-whats" type="button"
@@ -289,6 +289,34 @@
         </button>
       </div>
 
+    </div>
+  </div>
+  <!-- Modal de Pré-visualização do PDF -->
+  <div id="modal-preview" class="fixed inset-0 z-50 hidden items-center justify-center bg-indigo-950/80 p-4">
+    <div class="flex h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-200 p-4">
+        <h2 class="text-lg font-bold text-slate-800">Pré-visualização do orçamento</h2>
+
+        <button id="btn-fechar-preview" type="button" class="text-2xl font-bold text-slate-400 hover:text-red-500"
+          title="Fechar pré-visualização">
+          &times;
+        </button>
+      </div>
+
+      <iframe id="iframe-pdf-preview" class="min-h-0 flex-1 w-full" title="Pré-visualização do PDF">
+      </iframe>
+
+      <div class="flex gap-2 border-t border-slate-200 p-4">
+        <button id="btn-baixar-preview" type="button"
+          class="flex-1 rounded-lg bg-indigo-950 px-4 py-3 text-sm font-bold text-white hover:bg-indigo-900">
+          Baixar PDF
+        </button>
+
+        <button id="btn-cancelar-preview" type="button"
+          class="rounded-lg border border-slate-300 px-4 py-3 text-sm font-bold text-slate-600 hover:bg-slate-100">
+          Cancelar
+        </button>
+      </div>
     </div>
   </div>
 
