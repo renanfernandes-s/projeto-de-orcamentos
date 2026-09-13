@@ -7,7 +7,6 @@ let currentUser = null;
 let isProUser = false;
 let userPdfCount = 0;
 let pdfWorkerAtual = null;
-let pdfPreviewUrlAtual = null;
 let nomeArquivoAtual = 'orcamento.pdf';
 
 let itens = [];
@@ -29,26 +28,11 @@ const valorTotalEl = document.getElementById('valor-total');
 const btnGerarPdfEl = document.getElementById('btn-gerar-pdf');
 const btnEnviarWhatsEl = document.getElementById('btn-enviar-whats');
 const modalPreviewEl = document.getElementById('modal-preview');
-const iframePdfPreviewEl = document.getElementById('iframe-pdf-preview');
+const containerPdfPreviewEl = document.getElementById('container-pdf-preview');
 const btnFecharPreviewEl = document.getElementById('btn-fechar-preview');
 const btnBaixarPreviewEl = document.getElementById('btn-baixar-preview');
 const btnCancelarPreviewEl = document.getElementById('btn-cancelar-preview');
 
-function fecharPreview() {
-  modalPreviewEl?.classList.add('hidden');
-  modalPreviewEl?.classList.remove('flex');
-
-  if (iframePdfPreviewEl) {
-    iframePdfPreviewEl.src = '';
-  }
-
-  if (pdfPreviewUrlAtual) {
-    URL.revokeObjectURL(pdfPreviewUrlAtual);
-    pdfPreviewUrlAtual = null;
-  }
-
-  pdfWorkerAtual = null;
-}
 
 async function baixarPreview() {
   if (!pdfWorkerAtual || !btnBaixarPreviewEl) {
@@ -71,6 +55,7 @@ async function baixarPreview() {
     }
 
     btnEnviarWhatsEl?.classList.remove('hidden');
+    btnEnviarWhatsEl.classList.add('flex');
     fecharPreview();
     btnGerarPdfEl.textContent = '✓ PDF BAIXADO (Gerar Novamente)';
   } catch (err) {
@@ -242,9 +227,11 @@ listaItensEl.addEventListener('click', (e) => {
 });
 
 // --- Event Listeners do Modal PRO e Geração de Pix Real ---
+// ✅ CORREÇÃO (adiciona hidden e remove flex):
 if (btnFecharModalEl) {
   btnFecharModalEl.addEventListener('click', () => {
     modalProEl.classList.add('hidden');
+    modalProEl.classList.remove('flex');
     etapaOfertaEl.classList.remove('hidden');
     etapaPixEl.classList.add('hidden');
     etapaSucessoEl.classList.add('hidden');
@@ -337,6 +324,7 @@ if (btnCopiarPixEl) {
 if (btnConcluirProEl) {
   btnConcluirProEl.addEventListener('click', () => {
     modalProEl.classList.add('hidden');
+    modalProEl.classList.remove('flex');
     window.location.reload();
   });
 }
@@ -370,7 +358,10 @@ async function carregarUsuario() {
 
   if (user) {
     if (btnGoLoginEl) btnGoLoginEl.classList.add('hidden');
-    if (userInfoCardEl) userInfoCardEl.classList.remove('hidden');
+    if (userInfoCardEl) {
+      userInfoCardEl.classList.remove('hidden');
+      userInfoCardEl.classList.add('flex');
+    }
     if (userEmailEl) userEmailEl.textContent = user.email;
 
     let { data: profile } = await supabase
@@ -403,7 +394,10 @@ async function carregarUsuario() {
     }
   } else {
     if (btnGoLoginEl) btnGoLoginEl.classList.remove('hidden');
-    if (userInfoCardEl) userInfoCardEl.classList.add('hidden');
+    if (userInfoCardEl) {
+      userInfoCardEl.classList.add('hidden');
+      userInfoCardEl.classList.remove('flex');
+    }
   }
 }
 
@@ -426,12 +420,13 @@ async function gerarPDF() {
   if (!isProUser && userPdfCount >= 3) {
     if (modalProEl) {
       modalProEl.classList.remove('hidden');
+      modalProEl.classList.add('flex');
     } else {
       alert("Você atingiu o limite de 3 PDFs gratuitos. Faça o upgrade para o plano PRO!");
     }
     return;
   }
-  // --- Coleta de Dados do Formulário ---
+
   const prestadorNome = escaparHTML(document.getElementById('prestador-nome').value.trim());
   const prestadorFone = escaparHTML(document.getElementById('prestador-fone').value.trim());
   const clienteNome = escaparHTML(document.getElementById('cliente-nome').value.trim());
@@ -445,125 +440,125 @@ async function gerarPDF() {
   }
 
   btnGerarPdfEl.disabled = true;
-  btnGerarPdfEl.textContent = "Gerando PDF...";
+  btnGerarPdfEl.textContent = "Gerando Pré-visualização...";
 
   const container = document.createElement('div');
-  container.className = "p-8 bg-white font-sans text-slate-800 max-w-2xl mx-auto";
+  container.className = "p-6 bg-white font-sans text-slate-800 max-w-2xl mx-auto rounded-xl shadow-sm text-left";
   const subtotal = itens.reduce((acc, item) => acc + (item.qtd * item.preco), 0);
 
   container.innerHTML = `
-    <div class="flex justify-between items-start border-b border-slate-200 pb-6 mb-6">
+    <!-- Topo / Header -->
+    <div class="flex justify-between items-center border-b-2 border-indigo-950/10 pb-4 mb-4">
       <div>
-        <h1 class="text-2xl font-black text-indigo-950 tracking-tight">ORÇAMENTO</h1>
-        <p class="text-xs text-slate-400 mt-1">Data: ${new Date().toLocaleDateString('pt-BR')}</p>
+        <span class="inline-block px-2 py-0.5 bg-indigo-50 text-indigo-950 font-bold text-[9px] rounded uppercase mb-1">
+          Proposta Comercial
+        </span>
+        <h1 class="text-xl font-black text-indigo-950 tracking-tight">ORÇAMENTO</h1>
+        <p class="text-[10px] text-slate-400 font-medium">Data: ${new Date().toLocaleDateString('pt-BR')}</p>
       </div>
       <div class="text-right">
-        <span class="text-base font-black text-slate-800">Use <span class="text-emerald-500">OrçaFácil</span>.app</span>
+        <span class="text-xs font-black text-slate-800">Use <span class="text-emerald-500">OrçaFácil</span>.app</span>
       </div>
     </div>
 
-    <div class="grid grid-cols-2 gap-6 mb-8 text-xs">
-      <div class="bg-slate-50 p-3.5 rounded-lg border border-slate-100">
-        <p class="font-bold text-slate-400 uppercase tracking-wider text-[10px] mb-1">PRESTADOR DE SERVIÇO</p>
-        <p class="font-bold text-slate-800 text-sm">${prestadorNome}</p>
-        ${prestadorFone ? `<p class="text-slate-600 mt-0.5">${prestadorFone}</p>` : ''}
+    <!-- Cards Prestador e Cliente -->
+    <div class="grid grid-cols-2 gap-3 mb-4">
+      <div class="bg-slate-50 p-3 rounded-lg border border-slate-200/60">
+        <p class="font-bold text-indigo-950 uppercase tracking-wider text-[9px] mb-1">PRESTADOR DE SERVIÇO</p>
+        <p class="font-bold text-slate-800 text-xs">${prestadorNome}</p>
+        ${prestadorFone ? `<p class="text-[10px] text-slate-500 mt-0.5">${prestadorFone}</p>` : ''}
       </div>
-      <div class="bg-slate-50 p-3.5 rounded-lg border border-slate-100">
-        <p class="font-bold text-slate-400 uppercase tracking-wider text-[10px] mb-1">CLIENTE</p>
-        <p class="font-bold text-slate-800 text-sm">${clienteNome}</p>
-        ${clienteFone ? `<p class="text-slate-600 mt-0.5">${clienteFone}</p>` : ''}
+
+      <div class="bg-slate-50 p-3 rounded-lg border border-slate-200/60">
+        <p class="font-bold text-indigo-950 uppercase tracking-wider text-[9px] mb-1">CLIENTE</p>
+        <p class="font-bold text-slate-800 text-xs">${clienteNome}</p>
+        ${clienteFone ? `<p class="text-[10px] text-slate-500 mt-0.5">${clienteFone}</p>` : ''}
       </div>
     </div>
 
-    <table class="w-full text-left text-xs mb-8 border-collapse">
-      <thead>
-        <tr class="border-b-2 border-slate-200 text-slate-500 font-bold uppercase text-[10px]">
-          <th class="py-2.5">Descrição do Item / Serviço</th>
-          <th class="py-2.5 text-center w-16">Qtd.</th>
-          <th class="py-2.5 text-right w-28">Preço Un.</th>
-          <th class="py-2.5 text-right w-28">Subtotal</th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-slate-100">
-        ${itens.map(item => `
-          <tr>
-            <td class="py-3 font-medium text-slate-700">${escaparHTML(item.descricao || 'Item sem descrição')}</td>
-            <td class="py-3 text-center text-slate-600">${item.qtd}</td>
-            <td class="py-3 text-right text-slate-600">${formatarMoeda(item.preco)}</td>
-            <td class="py-3 text-right font-semibold text-slate-800">${formatarMoeda(item.qtd * item.preco)}</td>
+    <!-- Tabela de Itens -->
+    <div class="overflow-x-auto rounded-lg border border-slate-200/80 mb-4">
+      <table class="w-full text-left text-xs border-collapse">
+        <thead>
+          <tr class="bg-slate-100 text-slate-600 font-bold uppercase text-[9px] border-b border-slate-200">
+            <th class="py-2 px-3">Descrição</th>
+            <th class="py-2 px-1 text-center w-12">Qtd.</th>
+            <th class="py-2 px-2 text-right w-20">Preço Un.</th>
+            <th class="py-2 px-3 text-right w-20">Subtotal</th>
           </tr>
-        `).join('')}
-      </tbody>
-    </table>
+        </thead>
+        <tbody class="divide-y divide-slate-100 bg-white text-[11px]">
+          ${itens.map(item => `
+            <tr>
+              <td class="py-2 px-3 font-medium text-slate-700">${escaparHTML(item.descricao || 'Item sem descrição')}</td>
+              <td class="py-2 px-1 text-center text-slate-600">${item.qtd}</td>
+              <td class="py-2 px-2 text-right text-slate-600">${formatarMoeda(item.preco)}</td>
+              <td class="py-2 px-3 text-right font-bold text-slate-800">${formatarMoeda(item.qtd * item.preco)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
 
-    <div class="flex justify-end mb-12">
-      <div class="w-1/2 bg-indigo-950 text-white p-4 rounded-xl text-right">
-        <span class="text-xs uppercase tracking-wider text-slate-300 block mb-1">Valor Total</span>
-        <span class="text-2xl font-black text-emerald-400">${formatarMoeda(subtotal)}</span>
+    <!-- Total e Observações -->
+    <div class="flex flex-col gap-3 mb-4">
+      ${observacoes ? `
+        <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 text-[11px]">
+          <p class="mb-1 font-bold uppercase tracking-wider text-slate-500 text-[9px]">Observações & Condições</p>
+          <p class="whitespace-pre-line text-slate-700">${observacoes}</p>
+        </div>
+      ` : ''}
+
+      <div class="bg-indigo-950 text-white p-3.5 rounded-xl text-right">
+        <span class="text-[9px] font-bold uppercase tracking-widest text-indigo-300 block mb-0.5">Valor Total</span>
+        <span class="text-xl font-black text-emerald-400">${formatarMoeda(subtotal)}</span>
       </div>
     </div>
 
-    ${observacoes ? `
-      <div class="mb-8 rounded-lg border border-slate-200 bg-slate-50 p-4 text-xs">
-        <p class="mb-1 font-bold uppercase tracking-wider text-slate-400">
-          Observações / Condições Gerais
-        </p>
-        <p class="whitespace-pre-line text-slate-700">${observacoes}</p>
-      </div>
-    ` : ''}
-
-    <div class="text-center pt-6 border-t border-slate-100 text-[10px] text-slate-400">
-      <p>Este orçamento tem validade de 15 dias. Gerado por Use OrçaFácilAPP.</p>
+    <!-- Rodapé -->
+    <div class="pt-3 border-t border-slate-100 text-[9px] text-slate-400 text-center">
+      <p>Orçamento válido por 15 dias. Gerado por Use OrçaFácil.app</p>
     </div>
   `;
 
+  nomeArquivoAtual = `orcamento-${clienteNomeOriginal.toLowerCase().replace(/\s+/g, '-')}.pdf`;
+
   const opt = {
-    margin: 10,
-    filename: `orcamento-${clienteNomeOriginal.toLowerCase().replace(/\s+/g, '-')}.pdf`,
+    margin: 8,
+    filename: nomeArquivoAtual,
     image: { type: 'jpeg', quality: 0.98 },
     html2canvas: { scale: 2, useCORS: true },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
   };
 
-  try {
-    nomeArquivoAtual = opt.filename;
+  // Prepara o worker do html2pdf com a div criada
+  pdfWorkerAtual = html2pdf().set(opt).from(container);
 
-    pdfWorkerAtual = html2pdf()
-      .set(opt)
-      .from(container);
+  // Injeta o HTML diretamente no modal (Funciona perfeitamente no Celular e PC)
+  // ✅ CORREÇÃO:
+  if (containerPdfPreviewEl) {
+    containerPdfPreviewEl.innerHTML = '';
+    containerPdfPreviewEl.appendChild(container);
+  }
 
-    const pdfBlob = await pdfWorkerAtual.outputPdf('blob');
-
-    if (pdfPreviewUrlAtual) {
-      URL.revokeObjectURL(pdfPreviewUrlAtual);
-    }
-
-    pdfPreviewUrlAtual = URL.createObjectURL(pdfBlob);
-
-    if (iframePdfPreviewEl) {
-      iframePdfPreviewEl.src = pdfPreviewUrlAtual;
-    }
-
-    if (modalPreviewEl) {
-      modalPreviewEl.classList.remove('hidden');
-      modalPreviewEl.classList.add('flex');
-    }
-
-    btnGerarPdfEl.textContent = '👁️ Pré-visualizar PDF novamente';
-  } catch (err) {
-    console.error('Erro ao gerar pré-visualização:', err);
-    alert('Ocorreu um erro ao gerar a pré-visualização do PDF.');
-
-  } finally {
-    btnGerarPdfEl.disabled = false;
+  if (modalPreviewEl) {
+    modalPreviewEl.classList.remove('hidden');
+    modalPreviewEl.classList.add('flex');
+  }
+  btnGerarPdfEl.textContent = "👁️ 1. Pré-visualizar PDF";
+  btnGerarPdfEl.disabled = false;
+}
+//Função para fechar o modal de pré-visualização
+// ✅ CORREÇÃO:
+function fecharPreview() {
+  if (modalPreviewEl) {
+    modalPreviewEl.classList.add('hidden');
+    modalPreviewEl.classList.remove('flex');
+  }
+  if (containerPdfPreviewEl) {
+    containerPdfPreviewEl.innerHTML = '';
   }
 }
-//Liberar a URL do objeto Blob quando a janela for fechada ou recarregada
-window.addEventListener('beforeunload', () => {
-  if (pdfPreviewUrlAtual) {
-    URL.revokeObjectURL(pdfPreviewUrlAtual);
-  }
-});
 
 // --- Função para Abrir WhatsApp ---
 function enviarWhatsApp() {

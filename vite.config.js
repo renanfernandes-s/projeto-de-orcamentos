@@ -1,5 +1,10 @@
 import { defineConfig } from 'vite';
-import { resolve } from 'path';
+import { fileURLToPath, URL } from 'node:url';
+import { dirname, resolve } from 'node:path';
+
+// Recria o __dirname para ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export default defineConfig({
     server: {
