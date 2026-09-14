@@ -10,7 +10,7 @@ O **OrçaFácil** é um Micro-SaaS projetado para ajudar prestadores de serviço
 * **Hospedagem:** Vercel (Deploy contínuo via GitHub)
 * **Domínio & SSL:** `useorcafacilapp.com.br` via Registro.br e Vercel
 * **Banco de Dados & Auth:** Supabase (PostgreSQL, Row Level Security - RLS)
-* **Pagamentos:** Asaas (Integração Pix para plano PRO)
+* **Pagamentos:** Asaas (Pix e cartão de crédito para o plano PRO)
 
 ---
 
@@ -27,7 +27,7 @@ O **OrçaFácil** é um Micro-SaaS projetado para ajudar prestadores de serviço
 - [x] **Tabela Dinâmica de Itens:** Adição e remoção interativa de serviços e produtos.
 - [x] **Cálculo Automático de Subtotais:** Atualização em tempo real do cálculo (Quantidade × Valor Unitário) e da soma total da proposta.
 - [x] **Validação de Acesso & Limite Gratuito:** Verificação do status de usuário através do banco de dados (Supabase Auth/RLS).
-- [x] **Checkout Pix & Autenticação:** Modal integrado para login/cadastro de conta e exibição do QR Code Pix para upgrade ao Plano PRO ilimitado.
+- [x] **Checkout Pix e Cartão & Autenticação:** Modal integrado para login/cadastro e pagamento do Plano PRO via Pix ou checkout seguro de cartão.
 
 ## 🔐 Arquitetura de Segurança & Dados
 
@@ -47,3 +47,9 @@ O **OrçaFácil** é um Micro-SaaS projetado para ajudar prestadores de serviço
 ## 📂 Estrutura de Pastas Atual
 
 Carregando...
+
+## 🔧 Operação de Pagamentos
+
+- Configure as variáveis de `.env.example` no ambiente da Vercel. Nunca versione ou compartilhe o arquivo `.env`.
+- Aplique `supabase/migrations/202609140001_payment_safety.sql` no projeto Supabase antes de publicar as rotas de pagamento.
+- Configure o webhook do Asaas para `/api/webhook-asaas` usando o valor de `ASAAS_WEBHOOK_TOKEN`.

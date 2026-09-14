@@ -8,6 +8,7 @@ let isProUser = false;
 let userPdfCount = 0;
 let pdfWorkerAtual = null;
 let nomeArquivoAtual = 'orcamento.pdf';
+let intervalProId = null; // Guard do ID do polling
 
 let itens = [];
 
@@ -33,29 +34,102 @@ const btnFecharPreviewEl = document.getElementById('btn-fechar-preview');
 const btnBaixarPreviewEl = document.getElementById('btn-baixar-preview');
 const btnCancelarPreviewEl = document.getElementById('btn-cancelar-preview');
 
+// --- Seleção de Elementos do Modal PRO e Pagamento ---
+const modalProEl = document.getElementById('modal-pro');
+const btnAssinarProEl = document.getElementById('btn-assinar-pro');
+const btnGerarCartaoEl = document.getElementById('btn-gerar-cartao');
+const btnConfirmarCartaoEl = document.getElementById('btn-confirmar-cartao');
+const btnFecharModalEl = document.getElementById('btn-fechar-modal');
+const btnCopiarPixEl = document.getElementById('btn-copiar-pix');
+const btnConcluirProEl = document.getElementById('btn-concluir-pro');
 
-async function baixarPreview() {
-  if (!pdfWorkerAtual || !btnBaixarPreviewEl) {
-    return;
+const etapaOfertaEl = document.getElementById('modal-etapa-oferta');
+const etapaPixEl = document.getElementById('modal-etapa-pix');
+const etapaCartaoEl = document.getElementById('modal-etapa-cartao');
+const etapaSucessoEl = document.getElementById('modal-etapa-sucesso');
+
+// Elementos de Entrada e Status
+const containerQrCodeEl = document.getElementById('container-qrcode-pix');
+const inputPixCopiaColaEl = document.getElementById('pix-copia-cola');
+const cartaoCpfInputEl = document.getElementById('cartao-cpf');
+const statusAguardandoCartaoEl = document.getElementById('status-aguardando-cartao');
+
+// Botões de Voltar para a Oferta
+const btnsVoltarOferta = document.querySelectorAll('.btn-voltar-oferta');
+
+// --- Função Helper de Validação de CPF/CNPJ ---
+// ✅ CORREÇÃO DA VALIDAÇÃO MATEMÁTICA REAL DE CPF/CNPJ
+function validarCpfCnpjFormato(val) {
+  const str = String(val || '').replace(/\D/g, '');
+
+  if (str.length === 11) {
+    if (/^(\d)\1{10}$/.test(str)) return false;
+    let soma = 0, resto;
+    for (let i = 1; i <= 9; i++) soma += parseInt(str.substring(i - 1, i)) * (11 - i);
+    resto = (soma * 10) % 11;
+    if (resto === 10 || resto === 11) resto = 0;
+    if (resto !== parseInt(str.substring(9, 10))) return false;
+
+    soma = 0;
+    for (let i = 1; i <= 10; i++) soma += parseInt(str.substring(i - 1, i)) * (12 - i);
+    resto = (soma * 10) % 11;
+    if (resto === 10 || resto === 11) resto = 0;
+    return resto === parseInt(str.substring(10, 11));
   }
+
+  if (str.length === 14) {
+    if (/^(\d)\1{13}$/.test(str)) return false;
+    let tamanho = str.length - 2;
+    let numeros = str.substring(0, tamanho);
+    const digitos = str.substring(tamanho);
+    let soma = 0, pos = tamanho - 7;
+    for (let i = tamanho; i >= 1; i--) {
+      soma += numeros.charAt(tamanho - i) * pos--;
+      if (pos < 2) pos = 9;
+    }
+    let resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
+    if (resultado !== parseInt(digitos.charAt(0))) return false;
+
+    tamanho = tamanho + 1;
+    numeros = str.substring(0, tamanho);
+    soma = 0;
+    pos = tamanho - 7;
+    for (let i = tamanho; i >= 1; i--) {
+      soma += numeros.charAt(tamanho - i) * pos--;
+      if (pos < 2) pos = 9;
+    }
+    resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
+    return resultado === parseInt(digitos.charAt(1));
+  }
+
+  return false;
+}
+
+// --- Função de Download do PDF Preview ---
+async function baixarPreview() {
+  if (!pdfWorkerAtual || !btnBaixarPreviewEl) return;
 
   btnBaixarPreviewEl.disabled = true;
   btnBaixarPreviewEl.textContent = 'Baixando...';
 
   try {
-    await pdfWorkerAtual.save();
+    if (!isProUser) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Sessão expirada. Faça login novamente.');
 
-    if (!isProUser && currentUser) {
-      userPdfCount += 1;
-
-      await supabase
-        .from('profiles')
-        .update({ pdf_count: userPdfCount })
-        .eq('id', currentUser.id);
+      const consumoResponse = await fetch('/api/consumir-pdf', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${session.access_token}` }
+      });
+      const consumoData = await consumoResponse.json();
+      if (!consumoResponse.ok) throw new Error(consumoData.error || 'Não foi possível validar o limite de PDFs.');
+      userPdfCount = consumoData.pdfCount ?? userPdfCount;
     }
 
+    await pdfWorkerAtual.save();
+
     btnEnviarWhatsEl?.classList.remove('hidden');
-    btnEnviarWhatsEl.classList.add('flex');
+    btnEnviarWhatsEl?.classList.add('flex');
     fecharPreview();
     btnGerarPdfEl.textContent = '✓ PDF BAIXADO (Gerar Novamente)';
   } catch (err) {
@@ -71,22 +145,7 @@ btnFecharPreviewEl?.addEventListener('click', fecharPreview);
 btnCancelarPreviewEl?.addEventListener('click', fecharPreview);
 btnBaixarPreviewEl?.addEventListener('click', baixarPreview);
 
-// --- Seleção de Elementos do Modal PRO e Pix ---
-const modalProEl = document.getElementById('modal-pro');
-const btnAssinarProEl = document.getElementById('btn-assinar-pro');
-const btnFecharModalEl = document.getElementById('btn-fechar-modal');
-const btnCopiarPixEl = document.getElementById('btn-copiar-pix');
-const btnConcluirProEl = document.getElementById('btn-concluir-pro');
-
-const etapaOfertaEl = document.getElementById('modal-etapa-oferta');
-const etapaPixEl = document.getElementById('modal-etapa-pix');
-const etapaSucessoEl = document.getElementById('modal-etapa-sucesso');
-
-// Elementos visuais do QR Code Pix
-const containerQrCodeEl = document.getElementById('container-qrcode-pix');
-const inputPixCopiaColaEl = document.getElementById('pix-copia-cola');
-
-// --- Formatação Monetária ---
+// --- Formatação Monetária e Helpers ---
 const formatarMoeda = (valor) => {
   return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 };
@@ -166,13 +225,11 @@ function renderizarTabela() {
     btnRemove.className = 'btn-remove text-red-500 hover:text-red-700 p-1';
     tdAcao.appendChild(btnRemove);
 
-    // Anexa as 4 células (td) na linha (tr)
     tr.appendChild(tdDesc);
     tr.appendChild(tdQtd);
     tr.appendChild(tdPreco);
     tr.appendChild(tdAcao);
 
-    // Anexa a linha (tr) no tbody/container da tabela (listaItensEl)
     listaItensEl.appendChild(tr);
   });
 
@@ -226,18 +283,40 @@ listaItensEl.addEventListener('click', (e) => {
   }
 });
 
-// --- Event Listeners do Modal PRO e Geração de Pix Real ---
-// ✅ CORREÇÃO (adiciona hidden e remove flex):
+// --- Navegação e Eventos do Modal PRO ---
+
+// Fechar Modal
 if (btnFecharModalEl) {
   btnFecharModalEl.addEventListener('click', () => {
-    modalProEl.classList.add('hidden');
-    modalProEl.classList.remove('flex');
-    etapaOfertaEl.classList.remove('hidden');
-    etapaPixEl.classList.add('hidden');
-    etapaSucessoEl.classList.add('hidden');
+    pararVerificacaoStatusPro();
+    modalProEl?.classList.add('hidden');
+    modalProEl?.classList.remove('flex');
+    etapaOfertaEl?.classList.remove('hidden');
+    etapaPixEl?.classList.add('hidden');
+    etapaCartaoEl?.classList.add('hidden');
+    etapaSucessoEl?.classList.add('hidden');
   });
 }
 
+// Botões de Voltar para Etapa de Oferta
+btnsVoltarOferta.forEach(btn => {
+  btn.addEventListener('click', () => {
+    pararVerificacaoStatusPro();
+    etapaPixEl?.classList.add('hidden');
+    etapaCartaoEl?.classList.add('hidden');
+    etapaOfertaEl?.classList.remove('hidden');
+  });
+});
+
+// Transição para Etapa Cartão
+if (btnGerarCartaoEl) {
+  btnGerarCartaoEl.addEventListener('click', () => {
+    etapaOfertaEl?.classList.add('hidden');
+    etapaCartaoEl?.classList.remove('hidden');
+  });
+}
+
+// --- Fluxo 1: Geração do Pix Real ---
 if (btnAssinarProEl) {
   btnAssinarProEl.addEventListener('click', async () => {
     if (!currentUser) {
@@ -252,11 +331,15 @@ if (btnAssinarProEl) {
       return;
     }
 
+    if (!validarCpfCnpjFormato(cpfInformado)) {
+      alert("CPF inválido! Por favor, informe um CPF com 11 dígitos ou CNPJ com 14 dígitos.");
+      return;
+    }
+
     btnAssinarProEl.disabled = true;
     btnAssinarProEl.textContent = "Gerando Pix seguro...";
 
     try {
-      // 1. Obtém a sessão ativa com o JWT Token do usuário
       const { data: { session } } = await supabase.auth.getSession();
 
       if (!session) {
@@ -265,12 +348,12 @@ if (btnAssinarProEl) {
 
       const prestadorNome = document.getElementById('prestador-nome')?.value.trim() || currentUser.email;
 
-      // 2. Faz a chamada autenticada direcionada para a extensão .mjs
-      const response = await fetch('/api/gerar-pix.mjs', {
+      const response = await fetch('/api/gerar-pix', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
+          'Authorization': `Bearer ${session.access_token}`,
+          'Idempotency-Key': crypto.randomUUID()
         },
         body: JSON.stringify({
           cpfCnpj: cpfInformado.replace(/\D/g, ''),
@@ -284,29 +367,25 @@ if (btnAssinarProEl) {
         throw new Error(data.error || 'Erro ao gerar Pix');
       }
 
-      // Injeta a imagem real do QR Code retornada pelo Asaas
       if (containerQrCodeEl) {
         containerQrCodeEl.innerHTML = `<img src="data:image/png;base64,${data.encodedImage}" alt="QR Code Pix" class="w-48 h-48 mx-auto object-contain">`;
       }
 
-      // Preenche o input Copia e Cola
       if (inputPixCopiaColaEl) {
         inputPixCopiaColaEl.value = data.payload;
       }
 
-      // Avança para a etapa do Pix
-      etapaOfertaEl.classList.add('hidden');
-      etapaPixEl.classList.remove('hidden');
+      etapaOfertaEl?.classList.add('hidden');
+      etapaPixEl?.classList.remove('hidden');
 
-      // Inicia verificação automática de status da aprovação via webhook
-      iniciarVerificacaoStatusPro();
+      iniciarVerificacaoStatusPro(data.paymentId);
 
     } catch (err) {
       console.error(err);
       alert(err.message || "Não foi possível gerar o QR Code Pix. Tente novamente.");
     } finally {
       btnAssinarProEl.disabled = false;
-      btnAssinarProEl.textContent = "Assinar Agora (Pix)";
+      btnAssinarProEl.textContent = "📱 Pagar R$ 14,90 via PIX";
     }
   });
 }
@@ -321,34 +400,142 @@ if (btnCopiarPixEl) {
   });
 }
 
+// --- Fluxo 2: Geração do Checkout Cartão de Crédito ---
+if (btnConfirmarCartaoEl) {
+  btnConfirmarCartaoEl.addEventListener('click', async () => {
+    const cpfCnpj = cartaoCpfInputEl?.value.trim().replace(/\D/g, '');
+
+
+    // Abrir a janela em branco antes de qualquer operação assíncrona
+    if (!cpfCnpj || !validarCpfCnpjFormato(cpfCnpj)) {
+      alert("Por favor, digite um CPF válido (11 dígitos) ou CNPJ (14 dígitos).");
+      cartaoCpfInputEl?.focus();
+      return; // Nenhuma janela foi aberta ainda, fluxo correto.
+    }
+
+    const janelaCheckout = window.open('about:blank', '_blank');
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session) {
+        janelaCheckout?.close();
+        alert("Sessão expirada. Faça login novamente para continuar.");
+        return;
+      }
+
+      btnConfirmarCartaoEl.disabled = true;
+      btnConfirmarCartaoEl.innerHTML = `<span class="animate-spin">⏳</span> Gerando Link...`;
+
+      const prestadorNome = document.getElementById('prestador-nome')?.value.trim() || currentUser.email;
+
+      const response = await fetch('/api/gerar-checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+          'Idempotency-Key': crypto.randomUUID()
+        },
+        body: JSON.stringify({
+          cpfCnpj: cpfCnpj,
+          name: prestadorNome
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.invoiceUrl) {
+        janelaCheckout?.close();
+        throw new Error(data.error || 'A URL do checkout não pôde ser gerada.');
+      }
+
+      // Redireciona a janela aberta
+      if (janelaCheckout) {
+        janelaCheckout.location.href = data.invoiceUrl;
+      }
+
+      // Atualiza status na interface
+      statusAguardandoCartaoEl?.classList.remove('hidden');
+      statusAguardandoCartaoEl?.classList.add('flex');
+
+      iniciarVerificacaoStatusPro(data.paymentId);
+
+    } catch (err) {
+      janelaCheckout?.close();
+      console.error('Erro no checkout via cartão:', err);
+      alert(err.message || 'Erro ao processar requisição.');
+    } finally {
+      btnConfirmarCartaoEl.disabled = false;
+      btnConfirmarCartaoEl.textContent = "Ir para Pagamento Seguro 🔒";
+    }
+  });
+}
+
 if (btnConcluirProEl) {
   btnConcluirProEl.addEventListener('click', () => {
-    modalProEl.classList.add('hidden');
-    modalProEl.classList.remove('flex');
+    pararVerificacaoStatusPro();
+    modalProEl?.classList.add('hidden');
+    modalProEl?.classList.remove('flex');
     window.location.reload();
   });
 }
 
-// Verificador automático de aprovação em segundo plano
-function iniciarVerificacaoStatusPro() {
-  const intervalo = setInterval(async () => {
+// Verificador automático de aprovação em segundo plano (Polling)
+function iniciarVerificacaoStatusPro(paymentId) {
+  pararVerificacaoStatusPro();
+
+  if (!paymentId) return;
+
+  let tentativas = 0;
+  const maxTentativas = 36; // 3 minutos (36 * 5 seg)
+
+  intervalProId = setInterval(async () => {
     if (!currentUser) return;
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('is_pro')
-      .eq('id', currentUser.id)
-      .single();
+    tentativas++;
 
-    if (profile && profile.is_pro) {
-      clearInterval(intervalo);
-      isProUser = true;
-      if (proBadgeEl) proBadgeEl.classList.remove('hidden');
+    // Chegou ao limite de tempo sem confirmação
+    if (tentativas >= maxTentativas) {
+      pararVerificacaoStatusPro();
+      alert("O tempo de verificação expirou. Se você já realizou o pagamento, aguarde alguns instantes ou recarregue a página.");
 
-      etapaPixEl.classList.add('hidden');
-      etapaSucessoEl.classList.remove('hidden');
+      // Opcional: restaura os botões da interface
+      if (btnAssinarProEl) {
+        btnAssinarProEl.disabled = false;
+        btnAssinarProEl.textContent = "📱 Pagar R$ 14,90 via PIX";
+      }
+      return;
+    }
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const response = await fetch(`/api/status-pagamento?paymentId=${encodeURIComponent(paymentId)}`, {
+        headers: { 'Authorization': `Bearer ${session.access_token}` }
+      });
+      const data = await response.json();
+
+      if (response.ok && (data.status === 'RECEIVED' || data.status === 'CONFIRMED')) {
+        pararVerificacaoStatusPro();
+        isProUser = true;
+        if (proBadgeEl) proBadgeEl.classList.remove('hidden');
+
+        etapaPixEl?.classList.add('hidden');
+        etapaCartaoEl?.classList.add('hidden');
+        etapaSucessoEl?.classList.remove('hidden');
+      }
+    } catch (err) {
+      console.error('Erro na checagem de status:', err);
     }
   }, 5000);
+}
+
+function pararVerificacaoStatusPro() {
+  if (intervalProId) {
+    clearInterval(intervalProId);
+    intervalProId = null;
+  }
 }
 
 // --- Integração com Supabase (Sessão do Usuário) ---
@@ -404,6 +591,7 @@ async function carregarUsuario() {
 // --- Função de Logout ---
 if (btnLogoutEl) {
   btnLogoutEl.addEventListener('click', async () => {
+    pararVerificacaoStatusPro();
     await supabase.auth.signOut();
     window.location.reload();
   });
@@ -531,11 +719,8 @@ async function gerarPDF() {
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
   };
 
-  // Prepara o worker do html2pdf com a div criada
   pdfWorkerAtual = html2pdf().set(opt).from(container);
 
-  // Injeta o HTML diretamente no modal (Funciona perfeitamente no Celular e PC)
-  // ✅ CORREÇÃO:
   if (containerPdfPreviewEl) {
     containerPdfPreviewEl.innerHTML = '';
     containerPdfPreviewEl.appendChild(container);
@@ -545,11 +730,10 @@ async function gerarPDF() {
     modalPreviewEl.classList.remove('hidden');
     modalPreviewEl.classList.add('flex');
   }
-  btnGerarPdfEl.textContent = "👁️ 1. Pré-visualizar PDF";
+  btnGerarPdfEl.textContent = "📄 1. Pré-Visualizar PDF";
   btnGerarPdfEl.disabled = false;
 }
-//Função para fechar o modal de pré-visualização
-// ✅ CORREÇÃO:
+
 function fecharPreview() {
   if (modalPreviewEl) {
     modalPreviewEl.classList.add('hidden');
@@ -565,20 +749,26 @@ function enviarWhatsApp() {
   const clienteNome = document.getElementById('cliente-nome').value.trim();
   const clienteFone = document.getElementById('cliente-fone').value.trim();
 
-
   if (!clienteFone) {
     alert("Por favor, preencha o WhatsApp do cliente para enviar.");
     return;
   }
+  // 1. Remove qualquer caractere que não seja número (espaços, parênteses, hífens, +)
+  let foneLimpo = clienteFone.replace(/\D/g, '');
 
-  const foneLimpo = clienteFone.replace(/\D/g, '');
+  // 2. Trata o DDD e o código do país
+  // Se o usuário digitou apenas DDD + número (10 ou 11 dígitos), adiciona o '55' do Brasil
+  if (foneLimpo.length === 10 || foneLimpo.length === 11) {
+    foneLimpo = `55${foneLimpo}`;
+  }
+
   const mensagem = encodeURIComponent(`Olá ${clienteNome}, Tudo bem?
 
 Conforme conversamos, preparei a proposta comercial detalhada para o seu projeto.
 
-Anexei o PDF com todas as especificações e prazos para sua avaliação. Fico à disposição para qualquer dúvida! (PDF em anexo).`);
+Anexei o PDF com todas as especificações e prazos para sua avaliação. Fico à disposição para qualquer dúvida!`);
 
-  window.open(`https://wa.me/55${foneLimpo}?text=${mensagem}`, '_blank');
+  window.open(`https://wa.me/${foneLimpo}?text=${mensagem}`, '_blank');
 }
 
 // --- Vinculação de Eventos Finais ---

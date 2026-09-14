@@ -35,22 +35,15 @@ export default async function handler(req, res) {
 
         const { attempt, existing } = await reservarTentativa({
             userId: user.id,
-            method: 'PIX',
+            method: 'CREDIT_CARD',
             cpfCnpj,
             idempotencyKey
         });
         attemptId = attempt.id;
 
         if (existing) {
-            if (!attempt.payment_id) return res.status(409).json({ error: 'Esta cobrança ainda está sendo processada.' });
-            const qrCodeRes = await fetch(`${ASAAS_BASE_URL}/payments/${attempt.payment_id}/pixQrCode`, {
-                headers: { 'access_token': process.env.ASAAS_API_KEY }
-            });
-            const qrCodeData = await qrCodeRes.json();
-            if (!qrCodeRes.ok || !qrCodeData.encodedImage) {
-                return res.status(400).json({ error: qrCodeData.errors?.[0]?.description || 'Erro ao recuperar QR Code do Pix.' });
-            }
-            return res.status(200).json({ paymentId: attempt.payment_id, encodedImage: qrCodeData.encodedImage, payload: qrCodeData.payload, expirationDate: qrCodeData.expirationDate });
+            if (!attempt.payment_id || !attempt.invoice_url) return res.status(409).json({ error: 'Esta cobrança ainda está sendo processada.' });
+            return res.status(200).json({ paymentId: attempt.payment_id, invoiceUrl: attempt.invoice_url });
         }
 
         const customerId = await buscarClienteAsaas({ cpfCnpj, userId: user.id, userEmail: user.email, name });
@@ -59,7 +52,7 @@ export default async function handler(req, res) {
             headers: { 'Content-Type': 'application/json', 'access_token': process.env.ASAAS_API_KEY },
             body: JSON.stringify({
                 customer: customerId,
-                billingType: 'PIX',
+                billingType: 'CREDIT_CARD',
                 value: PLANO_PRO_VALOR,
                 dueDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
                 description: PLANO_PRO_DESCRICAO,
@@ -67,21 +60,15 @@ export default async function handler(req, res) {
             })
         });
         const paymentData = await paymentRes.json();
-        if (!paymentRes.ok) throw new Error(paymentData.errors?.[0]?.description || 'Erro ao criar cobrança no Asaas.');
+        if (!paymentRes.ok || !paymentData.invoiceUrl) throw new Error(paymentData.errors?.[0]?.description || 'Erro ao gerar checkout no Asaas.');
 
-        await atualizarTentativa(attempt.id, { payment_id: paymentData.id, status: 'PENDING' });
-        const qrCodeRes = await fetch(`${ASAAS_BASE_URL}/payments/${paymentData.id}/pixQrCode`, {
-            headers: { 'access_token': process.env.ASAAS_API_KEY }
-        });
-        const qrCodeData = await qrCodeRes.json();
-        if (!qrCodeRes.ok || !qrCodeData.encodedImage) throw new Error(qrCodeData.errors?.[0]?.description || 'Erro ao gerar QR Code do Pix.');
-
-        return res.status(200).json({ paymentId: paymentData.id, encodedImage: qrCodeData.encodedImage, payload: qrCodeData.payload, expirationDate: qrCodeData.expirationDate });
+        await atualizarTentativa(attempt.id, { payment_id: paymentData.id, invoice_url: paymentData.invoiceUrl, status: 'PENDING' });
+        return res.status(200).json({ paymentId: paymentData.id, invoiceUrl: paymentData.invoiceUrl });
     } catch (err) {
         if (attemptId) {
-            try { await atualizarTentativa(attemptId, { status: 'FAILED' }); } catch (updateError) { console.error('Erro ao marcar tentativa PIX como falha:', updateError.message); }
+            try { await atualizarTentativa(attemptId, { status: 'FAILED' }); } catch (updateError) { console.error('Erro ao marcar tentativa de cartão como falha:', updateError.message); }
         }
-        console.error('Erro na rota /api/gerar-pix:', err.message);
-        return res.status(500).json({ error: 'Erro interno ao processar Pix.' });
+        console.error('Erro na rota /api/gerar-checkout:', err.message);
+        return res.status(500).json({ error: 'Erro interno ao processar checkout.' });
     }
 }

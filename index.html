@@ -186,13 +186,13 @@
 
   </main>
 
-  <!-- Modal de Upgrade PRO & Pagamento Pix Asaas -->
+  <!-- Modal de Upgrade PRO & Pagamento Asaas -->
   <div id="modal-pro"
     class="fixed inset-0 bg-indigo-950/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
     <div
       class="bg-white rounded-2xl max-w-sm w-full p-6 text-center shadow-2xl border border-slate-100 animate-in fade-in zoom-in duration-200">
 
-      <!-- ETAPA 1: Oferta e Venda -->
+      <!-- ETAPA 1: Oferta e Escolha do Método -->
       <div id="modal-etapa-oferta">
         <div
           class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl mx-auto flex items-center justify-center text-2xl mb-4 font-black">
@@ -201,13 +201,14 @@
         <h3 class="text-lg font-black text-indigo-950 tracking-tight mb-2">
           Você atingiu o limite gratuito!
         </h3>
-        <p class="text-xs text-slate-600 leading-relaxed mb-6">
+        <p class="text-xs text-slate-600 leading-relaxed mb-4">
           Parabéns por aproveitar o <span class="font-bold text-indigo-950">OrçaFácil.app</span>! Para continuar
-          fechando negócios sem travar e emitir <span class="font-bold text-emerald-600">orçamentos ilimitados</span>
-          com a sua marca, garanta acesso completo ao plano profissional agora mesmo.
+          fechando negócios e emitir <span class="font-bold text-emerald-600">orçamentos ilimitados</span>
+          com a sua marca, garanta acesso completo agora mesmo.
         </p>
+
         <div
-          class="bg-slate-50 rounded-xl p-3 text-left text-[11px] text-slate-700 space-y-2 mb-6 border border-slate-200/60">
+          class="bg-slate-50 rounded-xl p-3 text-left text-[11px] text-slate-700 space-y-2 mb-5 border border-slate-200/60">
           <div class="flex items-center gap-2">
             <span class="text-emerald-500 font-bold">✓</span> Orçamentos ilimitados sem restrições
           </div>
@@ -218,19 +219,27 @@
             <span class="text-emerald-500 font-bold">✓</span> Suporte prioritário para novos recursos
           </div>
         </div>
+
+        <!-- Opções de Pagamento: PIX ou Cartão -->
         <div class="space-y-2.5">
           <button id="btn-assinar-pro" type="button"
-            class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-xl text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/25 transition">
-            Quero Assinatura Ilimitada 🚀
+            class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-xl text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/25 transition flex items-center justify-center gap-2">
+            <span>📱</span> Pagar R$ 14,90 via PIX
           </button>
+
+          <button id="btn-gerar-cartao" type="button"
+            class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl text-xs uppercase tracking-wider shadow-lg shadow-indigo-600/25 transition flex items-center justify-center gap-2">
+            <span>💳</span> Pagar R$ 14,90 no Cartão
+          </button>
+
           <button id="btn-fechar-modal" type="button"
-            class="w-full py-2.5 bg-transparent hover:bg-slate-100 text-slate-400 hover:text-slate-600 font-bold rounded-xl text-xs transition">
+            class="w-full py-2 bg-transparent hover:bg-slate-100 text-slate-400 hover:text-slate-600 font-bold rounded-xl text-xs transition">
             Agora não
           </button>
         </div>
       </div>
 
-      <!-- ETAPA 2: Pagamento Pix (Asaas) -->
+      <!-- ETAPA 2A: Pagamento Pix (Asaas) -->
       <div id="modal-etapa-pix" class="hidden">
         <div
           class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-2xl mx-auto flex items-center justify-center text-xl mb-3 font-black">
@@ -268,6 +277,49 @@
           <span class="animate-spin text-sm">⏳</span>
           <span>Aguardando confirmação do pagamento...</span>
         </div>
+
+        <button type="button" class="btn-voltar-oferta text-xs text-slate-400 hover:text-slate-600 font-medium">
+          ← Voltar e escolher outra forma
+        </button>
+      </div>
+
+      <!-- ETAPA 2B: Pagamento Cartão de Crédito -->
+      <div id="modal-etapa-cartao" class="hidden">
+        <div
+          class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-2xl mx-auto flex items-center justify-center text-xl mb-3 font-black">
+          💳
+        </div>
+        <h3 class="text-base font-black text-indigo-950 tracking-tight mb-1">
+          Pagamento via Cartão
+        </h3>
+        <p class="text-[11px] text-slate-500 mb-4">
+          Informe seu CPF para gerar o link seguro de checkout no Asaas:
+        </p>
+
+        <div class="space-y-3 mb-4 text-left">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">CPF / CNPJ do
+              Titular</label>
+            <input type="text" id="cartao-cpf" placeholder="000.000.000-00"
+              class="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none" />
+          </div>
+
+          <button id="btn-confirmar-cartao" type="button"
+            class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition shadow-md">
+            Ir para Pagamento Seguro 🔒
+          </button>
+        </div>
+
+        <!-- Status de Aguardando Pagamento -->
+        <div id="status-aguardando-cartao"
+          class="hidden bg-amber-50 border border-amber-200 rounded-xl p-2.5 text-[11px] text-amber-800 items-center justify-center gap-2 mb-4">
+          <span class="animate-spin text-sm">⏳</span>
+          <span>Aguardando aprovação da operadora...</span>
+        </div>
+
+        <button type="button" class="btn-voltar-oferta text-xs text-slate-400 hover:text-slate-600 font-medium">
+          ← Voltar e escolher outra forma
+        </button>
       </div>
 
       <!-- ETAPA 3: Sucesso / Parabéns -->
@@ -291,6 +343,7 @@
 
     </div>
   </div>
+
   <!-- Modal de Pré-visualização do PDF -->
   <div id="modal-preview" class="fixed inset-0 z-50 hidden items-center justify-center bg-indigo-950/80 p-4">
     <div class="flex h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl">
