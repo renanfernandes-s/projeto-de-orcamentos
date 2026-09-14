@@ -564,7 +564,7 @@ function fecharPreview() {
 function enviarWhatsApp() {
   const clienteNome = document.getElementById('cliente-nome').value.trim();
   const clienteFone = document.getElementById('cliente-fone').value.trim();
-  const subtotal = itens.reduce((acc, item) => acc + (item.qtd * item.preco), 0);
+
 
   if (!clienteFone) {
     alert("Por favor, preencha o WhatsApp do cliente para enviar.");
@@ -572,7 +572,11 @@ function enviarWhatsApp() {
   }
 
   const foneLimpo = clienteFone.replace(/\D/g, '');
-  const mensagem = encodeURIComponent(`Olá ${clienteNome}, segue o seu orçamento no valor total de ${formatarMoeda(subtotal)}. (Em anexo no PDF).`);
+  const mensagem = encodeURIComponent(`Olá ${clienteNome}, Tudo bem?
+
+Conforme conversamos, preparei a proposta comercial detalhada para o seu projeto.
+
+Anexei o PDF com todas as especificações e prazos para sua avaliação. Fico à disposição para qualquer dúvida! (PDF em anexo).`);
 
   window.open(`https://wa.me/55${foneLimpo}?text=${mensagem}`, '_blank');
 }
