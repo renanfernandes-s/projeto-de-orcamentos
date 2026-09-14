@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { PLANO_PRO_VALOR, PLANO_PRO_DESCRICAO } from './_payment-utils.mjs';
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -11,10 +12,6 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
 const ASAAS_BASE_URL = process.env.ASAAS_URL;
 if (!ASAAS_BASE_URL) throw new Error('ASAAS_URL não configurada.');
-
-// Regras de negócio rigorosas
-const PLANO_PRO_VALOR_ESPERADO = 14.90;
-const PLANO_PRO_DESCRICAO_ESPERADA = 'Assinatura OrçaFácilApp PRO';
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
@@ -34,21 +31,18 @@ export default async function handler(req, res) {
 
         const { event, payment } = req.body;
 
-        // Se o evento não for de pagamento recebido/confirmado, apenas confirma a entrega do webhook
+        // Filtra apenas confirmações de pagamento
         if (event !== 'PAYMENT_RECEIVED' && event !== 'PAYMENT_CONFIRMED') {
             return res.status(200).json({ received: true, message: 'Evento ignorado (não é confirmação de pagamento).' });
         }
-        const supabaseAdmin = createClient(
-            supabaseUrl,
-            supabaseServiceKey
-        );
+
         if (!payment || !payment.id) {
             return res.status(400).json({ error: 'Dados da cobrança ausentes no payload.' });
         }
 
-        const PLANO_PRO_VALOR_ESPERADO = PLANO_PRO_VALOR;
-        const PLANO_PRO_DESCRICAO_ESPERADA = PLANO_PRO_DESCRICAO;
-        // 2. DUPLA CHECAGEM DIRECT SERVER-TO-SERVER NA API OFICIAL DO ASAAS
+        const paymentId = payment.id;
+
+        // 2. CHECAGEM SERVER-TO-SERVER NA API DO ASAAS
         const asaasResponse = await fetch(`${ASAAS_BASE_URL}/payments/${paymentId}`, {
             method: 'GET',
             headers: {
@@ -62,31 +56,45 @@ export default async function handler(req, res) {
 
         const verifiedPayment = await asaasResponse.json();
 
-        // 3. EXTRAÇÃO E FALLBACK DO USERID
+        // 3. VALIDAÇÃO OBRIGATÓRIA DO CLIENTE E USERID (Ponto 2 e 3 do VS Code)
         let targetUserId = verifiedPayment.externalReference;
 
-        // Fallback: Se não estiver gravado na cobrança, busca na referência externa do cadastro do cliente
-        if (!targetUserId && verifiedPayment.customer) {
-            const customerRes = await fetch(`${ASAAS_BASE_URL}/customers/${verifiedPayment.customer}`, {
-                headers: { 'access_token': process.env.ASAAS_API_KEY }
-            });
-            if (customerRes.ok) {
-                const customerData = await customerRes.json();
-                targetUserId = customerData.externalReference;
-            }
+        if (!verifiedPayment.customer) {
+            console.error(`❌ Webhook rejeitado: Cobrança ${paymentId} não possui cliente vinculado.`);
+            return res.status(200).json({ received: true, ignored: true, reason: 'Sem cliente vinculado' });
         }
 
+        const customerRes = await fetch(`${ASAAS_BASE_URL}/customers/${verifiedPayment.customer}`, {
+            headers: { 'access_token': process.env.ASAAS_API_KEY }
+        });
+
+        if (!customerRes.ok) {
+            throw new Error(`Falha ao consultar cliente ${verifiedPayment.customer} na API do Asaas. Status: ${customerRes.status}`);
+        }
+
+        const customerData = await customerRes.json();
+        const customerUserId = customerData.externalReference;
+
+        // Se o targetUserId não estava na cobrança, assume o do cliente
         if (!targetUserId) {
-            console.error(`❌ Webhook rejeitado: Nenhum userId vinculado à cobrança ${paymentId}.`);
-            return res.status(200).json({ received: true, ignored: true, reason: 'Sem userId vinculado' });
+            targetUserId = customerUserId;
+        }
+
+        // Validação rigorosa: A referência externa do cliente DEVE corresponder ao targetUserId
+        if (!customerUserId || customerUserId !== targetUserId) {
+            console.error(`🚨 ALERTA DE SEGURANÇA: Divergência de cliente na cobrança ${paymentId}!`, {
+                customerUserId,
+                targetUserId
+            });
+            return res.status(200).json({ received: true, ignored: true, reason: 'Correspondência inválida entre cliente e usuário' });
         }
 
         // 4. VALIDAÇÃO RIGOROSA DO CONTRATO
         const isStatusValido = verifiedPayment.status === 'RECEIVED' || verifiedPayment.status === 'CONFIRMED';
-        const isValorCorreto = Number(verifiedPayment.value) === PLANO_PRO_VALOR_ESPERADO;
+        const isValorCorreto = Number(verifiedPayment.value) === PLANO_PRO_VALOR;
         const metodosPermitidos = ['PIX', 'CREDIT_CARD'];
         const isMetodoValido = metodosPermitidos.includes(verifiedPayment.billingType);
-        const isDescricaoCorreta = verifiedPayment.description === PLANO_PRO_DESCRICAO_ESPERADA;
+        const isDescricaoCorreta = verifiedPayment.description === PLANO_PRO_DESCRICAO;
 
         if (!isStatusValido) {
             console.warn(`ℹ️ Pagamento ${paymentId} ignorado. Status retornado: ${verifiedPayment.status}`);
@@ -94,8 +102,8 @@ export default async function handler(req, res) {
         }
 
         if (!isValorCorreto || !isMetodoValido || !isDescricaoCorreta) {
-            console.error(`🚨 ALERTA DE SEGURANÇA: Divergência nos dados da cobrança ${paymentId}!`, {
-                valorEsperado: PLANO_PRO_VALOR_ESPERADO,
+            console.error(`🚨 ALERTA DE SEGURANÇA: Divergência nas regras de negócio da cobrança ${paymentId}!`, {
+                valorEsperado: PLANO_PRO_VALOR,
                 valorRecebido: verifiedPayment.value,
                 billingType: verifiedPayment.billingType,
                 description: verifiedPayment.description
@@ -103,17 +111,37 @@ export default async function handler(req, res) {
             return res.status(200).json({ received: true, ignored: true, reason: 'Divergência nas regras de negócio' });
         }
 
-        // 5. ATUALIZAÇÃO SEGURA NO SUPABASE
-        const { data: updatedProfile, error } = await supabaseAdmin
+        // 5. ATUALIZAÇÃO E CAPTURA DE ERRO EM payment_attempts (Ponto 1 e 4 do VS Code)
+        const { data: updatedAttempt, error: attemptError } = await supabaseAdmin
+            .from('payment_attempts')
+            .update({
+                status: verifiedPayment.status,
+                updated_at: new Date().toISOString()
+            })
+            .eq('payment_id', paymentId)
+            .select('id');
+
+        if (attemptError) {
+            console.error('❌ Erro ao atualizar payment_attempts no Supabase:', attemptError);
+            return res.status(500).json({ error: 'Erro ao atualizar tentativa de pagamento no banco' });
+        }
+
+        if (!updatedAttempt?.length) {
+            console.warn(`⚠️ Nenhuma tentativa de pagamento encontrada em payment_attempts para o payment_id: ${paymentId}`);
+        }
+
+        // 6. ATUALIZAÇÃO DO STATUS PRO DO USUÁRIO
+        const { data: updatedProfile, error: profileError } = await supabaseAdmin
             .from('profiles')
             .update({ is_pro: true })
             .eq('id', targetUserId)
             .select('id');
 
-        if (error) {
-            console.error('❌ Erro ao atualizar status PRO no Supabase:', error);
-            return res.status(500).json({ error: 'Erro ao atualizar banco de dados' });
+        if (profileError) {
+            console.error('❌ Erro ao atualizar status PRO no Supabase:', profileError);
+            return res.status(500).json({ error: 'Erro ao atualizar perfil no banco' });
         }
+
         if (!updatedProfile?.length) {
             return res.status(500).json({ error: 'Perfil do usuário não encontrado' });
         }
