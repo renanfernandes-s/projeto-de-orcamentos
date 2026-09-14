@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
-import { PLANO_PRO_VALOR, PLANO_PRO_DESCRICAO } from './_payment-utils.mjs';
+const PLANO_PRO_VALOR = 14.90;
+const PLANO_PRO_DESCRICAO = 'Assinatura OrçaFácilApp PRO';
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
