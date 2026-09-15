@@ -759,53 +759,55 @@ async function gerarPDF() {
 
   container.innerHTML = `
     <!-- Topo / Header -->
-    <div class="flex justify-between items-center border-b-2 border-indigo-950/10 pb-4 mb-4">
+    <div class="flex justify-between items-center border-b-2 border-purple-950/10 pb-4 mb-4">
       <div>
-        <span class="inline-block px-2 py-0.5 bg-indigo-50 text-indigo-950 font-bold text-[9px] rounded uppercase mb-1">
+        <span class="inline-block px-2 py-0.5 bg-purple-100 text-purple-950 font-bold text-[9px] rounded uppercase mb-1">
           Proposta Comercial
         </span>
-        <h1 class="text-xl font-black text-indigo-950 tracking-tight">ORÇAMENTO</h1>
+        <h1 class="text-xl font-black text-purple-950 tracking-tight">ORÇAMENTO</h1>
         <p class="text-[10px] text-slate-400 font-medium">Data: ${new Date().toLocaleDateString('pt-BR')}</p>
       </div>
       <div class="text-right">
-        <span class="text-xs font-black text-slate-800">Use <span class="text-emerald-500">OrçaFácil</span>.app</span>
+        <span class="inline-block px-2.5 py-1 bg-purple-50 border border-purple-200 text-purple-950 font-bold text-xs rounded-lg shadow-sm">
+          Use OrçaFácilApp
+        </span>
       </div>
     </div>
 
     <!-- Cards Prestador e Cliente -->
     <div class="grid grid-cols-2 gap-3 mb-4">
-      <div class="bg-slate-50 p-3 rounded-lg border border-slate-200/60">
-        <p class="font-bold text-indigo-950 uppercase tracking-wider text-[9px] mb-1">PRESTADOR DE SERVIÇO</p>
-        <p class="font-bold text-slate-800 text-xs">${prestadorNome}</p>
-        ${prestadorFone ? `<p class="text-[10px] text-slate-500 mt-0.5">${prestadorFone}</p>` : ''}
-        ${prestadorDocumento ? `<p class="text-[10px] text-slate-500 mt-0.5">CPF/CNPJ: ${formatarDocumento(prestadorDocumento)}</p>` : ''}
+      <div class="bg-slate-50 p-3 rounded-lg border border-slate-200/80">
+        <p class="font-bold text-purple-950 uppercase tracking-wider text-[9px] mb-1">PRESTADOR DE SERVIÇO</p>
+        <p class="font-bold text-slate-900 text-xs">${prestadorNome}</p>
+        ${prestadorFone ? `<p class="text-[10px] text-slate-600 mt-0.5">${prestadorFone}</p>` : ''}
+        ${prestadorDocumento ? `<p class="text-[10px] text-slate-600 mt-0.5 font-medium"><span class="font-bold">CPF/CNPJ:</span> ${formatarDocumento(prestadorDocumento)}</p>` : ''}
       </div>
 
-      <div class="bg-slate-50 p-3 rounded-lg border border-slate-200/60">
-        <p class="font-bold text-indigo-950 uppercase tracking-wider text-[9px] mb-1">CLIENTE</p>
-        <p class="font-bold text-slate-800 text-xs">${clienteNome}</p>
-        ${clienteFone ? `<p class="text-[10px] text-slate-500 mt-0.5">${clienteFone}</p>` : ''}
+      <div class="bg-slate-50 p-3 rounded-lg border border-slate-200/80">
+        <p class="font-bold text-purple-950 uppercase tracking-wider text-[9px] mb-1">CLIENTE</p>
+        <p class="font-bold text-slate-900 text-xs">${clienteNome}</p>
+        ${clienteFone ? `<p class="text-[10px] text-slate-600 mt-0.5">${clienteFone}</p>` : ''}
       </div>
     </div>
 
     <!-- Tabela de Itens -->
-    <div class="overflow-x-auto rounded-lg border border-slate-200/80 mb-4">
+    <div class="overflow-x-auto rounded-lg border border-slate-200 mb-4">
       <table class="w-full text-left text-xs border-collapse">
         <thead>
-          <tr class="bg-slate-100 text-slate-600 font-bold uppercase text-[9px] border-b border-slate-200">
-            <th class="py-2 px-3">Descrição</th>
-            <th class="py-2 px-1 text-center w-12">Qtd.</th>
-            <th class="py-2 px-2 text-right w-20">Preço Un.</th>
-            <th class="py-2 px-3 text-right w-20">Subtotal</th>
+          <tr class="bg-slate-800 text-white font-bold uppercase text-[9px]">
+            <th class="py-2.5 px-3">Descrição</th>
+            <th class="py-2.5 px-1 text-center w-12">Qtd.</th>
+            <th class="py-2.5 px-2 text-right w-20">Preço Un.</th>
+            <th class="py-2.5 px-3 text-right w-20">Subtotal</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-100 bg-white text-[11px]">
           ${itens.map(item => `
             <tr>
-              <td class="py-2 px-3 font-medium text-slate-700">${escaparHTML(item.descricao || 'Item sem descrição')}</td>
-              <td class="py-2 px-1 text-center text-slate-600">${item.qtd}</td>
-              <td class="py-2 px-2 text-right text-slate-600">${formatarMoeda(item.preco)}</td>
-              <td class="py-2 px-3 text-right font-bold text-slate-800">${formatarMoeda(item.qtd * item.preco)}</td>
+              <td class="py-2.5 px-3 font-medium text-slate-800">${escaparHTML(item.descricao || 'Item sem descrição')}</td>
+              <td class="py-2.5 px-1 text-center text-slate-600">${item.qtd}</td>
+              <td class="py-2.5 px-2 text-right text-slate-600">${formatarMoeda(item.preco)}</td>
+              <td class="py-2.5 px-3 text-right font-bold text-slate-900">${formatarMoeda(item.qtd * item.preco)}</td>
             </tr>
           `).join('')}
         </tbody>
@@ -821,15 +823,15 @@ async function gerarPDF() {
         </div>
       ` : ''}
 
-      <div class="bg-indigo-950 text-white p-3.5 rounded-xl text-right">
-        <span class="text-[9px] font-bold uppercase tracking-widest text-indigo-300 block mb-0.5">Valor Total</span>
-        <span class="text-xl font-black text-emerald-400">${formatarMoeda(subtotal)}</span>
+      <div class="bg-purple-950 text-white p-3.5 rounded-xl text-right border border-purple-900 shadow-sm">
+        <span class="text-[9px] font-bold uppercase tracking-widest text-purple-300 block mb-0.5">Valor Total</span>
+        <span class="text-2xl font-black text-emerald-400">${formatarMoeda(subtotal)}</span>
       </div>
     </div>
 
     <!-- Rodapé -->
     <div class="pt-3 border-t border-slate-100 text-[9px] text-slate-400 text-center">
-      <p>Orçamento válido por 15 dias. Gerado por Use OrçaFácil.app</p>
+      <p>Orçamento válido por 15 dias. Gerado por <strong class="text-purple-900 font-semibold">Use OrçaFácilApp</strong></p>
     </div>
   `;
 
