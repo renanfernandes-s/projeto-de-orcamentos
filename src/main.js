@@ -758,82 +758,334 @@ async function gerarPDF() {
   const subtotal = itens.reduce((acc, item) => acc + (item.qtd * item.preco), 0);
 
   container.innerHTML = `
-    <!-- Topo / Header -->
-    <div class="flex justify-between items-center border-b-2 border-purple-950/10 pb-4 mb-4">
+  <!-- =====================================================
+       ORÇAFÁCILAPP — TEMPLATE PROFISSIONAL
+       ===================================================== -->
+
+  <!-- HEADER -->
+  <div class="relative mb-5 overflow-hidden rounded-2xl bg-white">
+
+    <!-- Barra de identidade -->
+    <div class="absolute left-0 top-0 h-full w-1.5 bg-[#820AD1]"></div>
+
+    <div class="flex items-start justify-between border-b border-slate-200 pb-4 pl-4">
+
+      <!-- Identidade / Título -->
       <div>
-        <span class="inline-block px-2 py-0.5 bg-purple-100 text-purple-950 font-bold text-[9px] rounded uppercase mb-1">
-          Proposta Comercial
-        </span>
-        <h1 class="text-xl font-black text-purple-950 tracking-tight">ORÇAMENTO</h1>
-        <p class="text-[10px] text-slate-400 font-medium">Data: ${new Date().toLocaleDateString('pt-BR')}</p>
+        <div class="mb-1.5 flex items-center gap-2">
+          <span class="inline-flex items-center rounded-full bg-[#820AD1] px-2.5 py-1 text-[8px] font-extrabold uppercase tracking-widest text-white">
+            Proposta Comercial
+          </span>
+
+          <span class="text-[8px] font-bold uppercase tracking-wider text-slate-400">
+            Orçamento
+          </span>
+        </div>
+
+        <h1 class="text-[25px] font-black leading-none tracking-[-0.04em] text-slate-900">
+          ORÇAMENTO
+        </h1>
+
+        <p class="mt-1.5 text-[10px] font-medium text-slate-400">
+          Data de emissão:
+          <span class="font-bold text-slate-600">
+            ${new Date().toLocaleDateString('pt-BR')}
+          </span>
+        </p>
       </div>
+
+      <!-- Marca -->
       <div class="text-right">
-        <span class="inline-block px-2.5 py-1 bg-purple-50 border border-purple-200 text-purple-950 font-bold text-xs rounded-lg shadow-sm">
-          Use OrçaFácilApp
+        <div class="inline-flex items-center rounded-xl bg-[#820AD1] px-3 py-2 shadow-sm">
+          <span class="text-[10px] font-black tracking-tight text-white">
+            Use OrçaFácilApp
+          </span>
+        </div>
+
+        <p class="mt-1.5 text-[8px] font-medium text-slate-400">
+          Gestão simples de orçamentos
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- =====================================================
+       PRESTADOR + CLIENTE
+       ===================================================== -->
+
+  <div class="mb-5 grid grid-cols-[1.45fr_1fr] gap-3">
+
+    <!-- PRESTADOR -->
+    <div class="relative overflow-hidden rounded-2xl border border-purple-100 bg-purple-50/40 p-4">
+
+      <!-- Elemento roxo lateral -->
+      <div class="absolute left-0 top-0 h-full w-1 bg-[#820AD1]"></div>
+
+      <div class="pl-2">
+
+        <div class="mb-2 flex items-center gap-2">
+          <span class="flex h-5 w-5 items-center justify-center rounded-md bg-[#820AD1] text-[9px] font-black text-white">
+            P
+          </span>
+
+          <p class="text-[8px] font-extrabold uppercase tracking-[0.14em] text-[#820AD1]">
+            Prestador de Serviço
+          </p>
+        </div>
+
+        <p class="text-[15px] font-black leading-tight tracking-tight text-slate-900">
+          ${prestadorNome}
+        </p>
+
+        ${prestadorFone
+      ? `
+              <div class="mt-2 flex items-center gap-1.5">
+                <span class="text-[9px] font-bold text-slate-400">
+                  TEL.
+                </span>
+
+                <span class="text-[10px] font-semibold text-slate-700">
+                  ${prestadorFone}
+                </span>
+              </div>
+            `
+      : ''
+    }
+
+        ${prestadorDocumento
+      ? `
+              <div class="mt-1 flex items-center gap-1.5">
+                <span class="text-[9px] font-bold text-slate-400">
+                  DOC.
+                </span>
+
+                <span class="text-[10px] font-semibold text-slate-700">
+                  ${formatarDocumento(prestadorDocumento)}
+                </span>
+              </div>
+            `
+      : ''
+    }
+
+      </div>
+    </div>
+
+
+    <!-- CLIENTE -->
+    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+
+      <div class="mb-2 flex items-center gap-2">
+        <span class="flex h-5 w-5 items-center justify-center rounded-md bg-slate-800 text-[9px] font-black text-white">
+          C
         </span>
+
+        <p class="text-[8px] font-extrabold uppercase tracking-[0.14em] text-slate-500">
+          Cliente
+        </p>
       </div>
+
+      <p class="text-[13px] font-black leading-tight tracking-tight text-slate-900">
+        ${clienteNome}
+      </p>
+
+      ${clienteFone
+      ? `
+            <div class="mt-2 flex items-center gap-1.5">
+              <span class="text-[9px] font-bold text-slate-400">
+                TEL.
+              </span>
+
+              <span class="text-[10px] font-semibold text-slate-700">
+                ${clienteFone}
+              </span>
+            </div>
+          `
+      : ''
+    }
+
     </div>
 
-    <!-- Cards Prestador e Cliente -->
-    <div class="grid grid-cols-2 gap-3 mb-4">
-      <div class="bg-slate-50 p-3 rounded-lg border border-slate-200/80">
-        <p class="font-bold text-purple-950 uppercase tracking-wider text-[9px] mb-1">PRESTADOR DE SERVIÇO</p>
-        <p class="font-bold text-slate-900 text-xs">${prestadorNome}</p>
-        ${prestadorFone ? `<p class="text-[10px] text-slate-600 mt-0.5">${prestadorFone}</p>` : ''}
-        ${prestadorDocumento ? `<p class="text-[10px] text-slate-600 mt-0.5 font-medium"><span class="font-bold">CPF/CNPJ:</span> ${formatarDocumento(prestadorDocumento)}</p>` : ''}
+  </div>
+
+
+  <!-- =====================================================
+       ITENS DO ORÇAMENTO
+       ===================================================== -->
+
+  <div class="mb-5 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_2px_8px_rgba(15,23,42,0.04)]">
+
+    <!-- Título da seção -->
+    <div class="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+
+      <div>
+        <p class="text-[8px] font-extrabold uppercase tracking-[0.14em] text-[#820AD1]">
+          Detalhamento
+        </p>
+
+        <p class="mt-0.5 text-[11px] font-bold text-slate-800">
+          Itens do orçamento
+        </p>
       </div>
 
-      <div class="bg-slate-50 p-3 rounded-lg border border-slate-200/80">
-        <p class="font-bold text-purple-950 uppercase tracking-wider text-[9px] mb-1">CLIENTE</p>
-        <p class="font-bold text-slate-900 text-xs">${clienteNome}</p>
-        ${clienteFone ? `<p class="text-[10px] text-slate-600 mt-0.5">${clienteFone}</p>` : ''}
-      </div>
+      <span class="rounded-full bg-slate-100 px-2.5 py-1 text-[8px] font-bold uppercase tracking-wider text-slate-500">
+        ${itens.length} ${itens.length === 1 ? 'item' : 'itens'}
+      </span>
+
     </div>
 
-    <!-- Tabela de Itens -->
-    <div class="overflow-x-auto rounded-lg border border-slate-200 mb-4">
-      <table class="w-full text-left text-xs border-collapse">
+
+    <!-- Tabela -->
+    <div class="overflow-x-auto">
+      <table class="w-full border-collapse text-left text-xs">
+
         <thead>
-          <tr class="bg-slate-800 text-white font-bold uppercase text-[9px]">
-            <th class="py-2.5 px-3">Descrição</th>
-            <th class="py-2.5 px-1 text-center w-12">Qtd.</th>
-            <th class="py-2.5 px-2 text-right w-20">Preço Un.</th>
-            <th class="py-2.5 px-3 text-right w-20">Subtotal</th>
+          <tr class="bg-[#820AD1] text-white">
+
+            <th class="px-4 py-3 text-[8px] font-extrabold uppercase tracking-wider">
+              Descrição
+            </th>
+
+            <th class="w-14 px-1 py-3 text-center text-[8px] font-extrabold uppercase tracking-wider">
+              Qtd.
+            </th>
+
+            <th class="w-24 px-2 py-3 text-right text-[8px] font-extrabold uppercase tracking-wider">
+              Preço Un.
+            </th>
+
+            <th class="w-24 px-4 py-3 text-right text-[8px] font-extrabold uppercase tracking-wider">
+              Subtotal
+            </th>
+
           </tr>
         </thead>
-        <tbody class="divide-y divide-slate-100 bg-white text-[11px]">
-          ${itens.map(item => `
-            <tr>
-              <td class="py-2.5 px-3 font-medium text-slate-800">${escaparHTML(item.descricao || 'Item sem descrição')}</td>
-              <td class="py-2.5 px-1 text-center text-slate-600">${item.qtd}</td>
-              <td class="py-2.5 px-2 text-right text-slate-600">${formatarMoeda(item.preco)}</td>
-              <td class="py-2.5 px-3 text-right font-bold text-slate-900">${formatarMoeda(item.qtd * item.preco)}</td>
+
+
+        <tbody class="divide-y divide-slate-100 bg-white text-[10px]">
+
+          ${itens.map((item, index) => `
+            <tr class="${index % 2 === 0 ? 'bg-white' : 'bg-slate-50/60'}">
+
+              <td class="px-4 py-3 font-semibold text-slate-800">
+                ${escaparHTML(item.descricao || 'Item sem descrição')}
+              </td>
+
+              <td class="px-1 py-3 text-center font-medium text-slate-500">
+                ${item.qtd}
+              </td>
+
+              <td class="px-2 py-3 text-right font-medium text-slate-500">
+                ${formatarMoeda(item.preco)}
+              </td>
+
+              <td class="px-4 py-3 text-right font-extrabold text-slate-900">
+                ${formatarMoeda(item.qtd * item.preco)}
+              </td>
+
             </tr>
           `).join('')}
+
         </tbody>
+
       </table>
     </div>
+  </div>
 
-    <!-- Total e Observações -->
-    <div class="flex flex-col gap-3 mb-4">
-      ${observacoes ? `
-        <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 text-[11px]">
-          <p class="mb-1 font-bold uppercase tracking-wider text-slate-500 text-[9px]">Observações & Condições</p>
-          <p class="whitespace-pre-line text-slate-700">${observacoes}</p>
+
+  <!-- =====================================================
+       OBSERVAÇÕES
+       ===================================================== -->
+
+  ${observacoes
+      ? `
+        <div class="mb-5 rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+
+          <div class="mb-2 flex items-center gap-2">
+
+            <span class="flex h-5 w-5 items-center justify-center rounded-md bg-slate-800 text-[8px] font-black text-white">
+              i
+            </span>
+
+            <p class="text-[8px] font-extrabold uppercase tracking-[0.14em] text-slate-500">
+              Observações & Condições
+            </p>
+
+          </div>
+
+          <p class="whitespace-pre-line pl-7 text-[10px] leading-relaxed text-slate-600">
+            ${observacoes}
+          </p>
+
         </div>
-      ` : ''}
+      `
+      : ''
+    }
 
-      <div class="bg-purple-950 text-white p-3.5 rounded-xl text-right border border-purple-900 shadow-sm">
-        <span class="text-[9px] font-bold uppercase tracking-widest text-purple-300 block mb-0.5">Valor Total</span>
-        <span class="text-2xl font-black text-emerald-400">${formatarMoeda(subtotal)}</span>
+
+  <!-- =====================================================
+       TOTAL — BLOCO ASSIMÉTRICO
+       ===================================================== -->
+
+  <div class="mb-5 flex justify-end">
+
+    <div class="relative w-[72%] overflow-hidden rounded-2xl bg-[#820AD1] px-5 py-4 text-right shadow-[0_6px_18px_rgba(130,10,209,0.16)]">
+
+      <!-- Detalhe decorativo -->
+      <div class="absolute -right-8 -top-8 h-20 w-20 rounded-full bg-white/10"></div>
+
+      <div class="relative">
+
+        <span class="mb-1 block text-[8px] font-extrabold uppercase tracking-[0.18em] text-purple-100">
+          Valor Total
+        </span>
+
+        <span class="block text-[25px] font-black leading-none tracking-tight text-emerald-400">
+          ${formatarMoeda(subtotal)}
+        </span>
+
       </div>
+
     </div>
 
-    <!-- Rodapé -->
-    <div class="pt-3 border-t border-slate-100 text-[9px] text-slate-400 text-center">
-      <p>Orçamento válido por 15 dias. Gerado por <strong class="text-purple-900 font-semibold">Use OrçaFácilApp</strong></p>
+  </div>
+
+
+  <!-- =====================================================
+       RODAPÉ
+       ===================================================== -->
+
+  <div class="border-t border-slate-200 pt-3">
+
+    <div class="flex items-center justify-between">
+
+      <div>
+        <p class="text-[8px] font-bold text-slate-400">
+          Orçamento válido por 15 dias.
+        </p>
+
+        <p class="mt-0.5 text-[8px] text-slate-400">
+          Documento gerado digitalmente.
+        </p>
+      </div>
+
+      <div class="text-right">
+
+        <p class="text-[8px] font-medium text-slate-400">
+          Gerado por
+        </p>
+
+        <p class="text-[9px] font-black tracking-tight text-[#820AD1]">
+          Use OrçaFácilApp
+        </p>
+
+      </div>
+
     </div>
-  `;
+
+  </div>
+`;
 
   nomeArquivoAtual = `orcamento-${clienteNomeOriginal.toLowerCase().replace(/\s+/g, '-')}.pdf`;
 
