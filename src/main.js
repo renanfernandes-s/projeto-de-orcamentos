@@ -20,6 +20,8 @@ const userInfoCardEl = document.getElementById('user-info-card');
 const userEmailEl = document.getElementById('user-email');
 const proBadgeEl = document.getElementById('pro-badge');
 const btnLogoutEl = document.getElementById('btn-logout');
+const prestadorDocumentoInputEl = document.getElementById('prestador-documento');
+const prestadorDocumentoSalvarEl = document.getElementById('prestador-documento-salvar');
 
 const listaItensEl = document.getElementById('lista-itens');
 const btnAddItemEl = document.getElementById('btn-add-item');
@@ -103,6 +105,71 @@ function validarCpfCnpjFormato(val) {
   }
 
   return false;
+}
+
+function limparDocumento(value) {
+  return String(value || '').replace(/\D/g, '');
+}
+
+function formatarDocumento(value) {
+  const digits = limparDocumento(value);
+
+  if (digits.length <= 11) {
+    return digits
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
+      .slice(0, 14);
+  }
+
+  return digits
+    .replace(/(\d{2})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1/$2')
+    .replace(/(\d{4})(\d{1,2})$/, '$1-$2')
+    .slice(0, 18);
+}
+
+async function sincronizarDocumentoPerfil(documento, salvar) {
+  if (!currentUser) return;
+
+  const documentoLimpo = limparDocumento(documento);
+
+  if (!salvar) {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ documento: null, documento_salvo: false })
+      .eq('id', currentUser.id);
+
+    if (error) {
+      console.error('Erro ao limpar documento salvo:', error);
+      alert('Não foi possível remover o documento salvo. Tente novamente.');
+    }
+
+    return;
+  }
+
+  if (!documentoLimpo) {
+    alert('Digite um CPF ou CNPJ para salvar no perfil.');
+    if (prestadorDocumentoSalvarEl) prestadorDocumentoSalvarEl.checked = false;
+    return;
+  }
+
+  if (!validarCpfCnpjFormato(documentoLimpo)) {
+    alert('CPF ou CNPJ inválido. Informe um documento válido para salvar.');
+    if (prestadorDocumentoSalvarEl) prestadorDocumentoSalvarEl.checked = false;
+    return;
+  }
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({ documento: documentoLimpo, documento_salvo: true })
+    .eq('id', currentUser.id);
+
+  if (error) {
+    console.error('Erro ao salvar documento do perfil:', error);
+    alert('Não foi possível salvar o CPF/CNPJ no perfil. Tente novamente.');
+  }
 }
 
 // --- Função de Download do PDF Preview ---
@@ -551,25 +618,53 @@ async function carregarUsuario() {
     }
     if (userEmailEl) userEmailEl.textContent = user.email;
 
-    let { data: profile } = await supabase
+    let profileQuery = supabase
       .from('profiles')
-      .select('is_pro, pdf_count')
+      .select('is_pro, pdf_count, documento, documento_salvo')
       .eq('id', user.id)
       .single();
 
-    if (!profile) {
-      const { data: novoPerfil } = await supabase
+    let { data: profile, error } = await profileQuery;
+
+    if (error && error.code === '42703') {
+      ({ data: profile, error } = await supabase
         .from('profiles')
-        .insert([{ id: user.id, is_pro: false, pdf_count: 0 }])
         .select('is_pro, pdf_count')
+        .eq('id', user.id)
+        .single());
+    }
+
+    if (!profile) {
+      const { data: novoPerfil, error: insertError } = await supabase
+        .from('profiles')
+        .insert([{ id: user.id, is_pro: false, pdf_count: 0, documento: null, documento_salvo: false }])
+        .select('is_pro, pdf_count, documento, documento_salvo')
         .single();
 
-      profile = novoPerfil;
+      if (insertError && insertError.code === '42703') {
+        const { data: perfilFallback } = await supabase
+          .from('profiles')
+          .insert([{ id: user.id, is_pro: false, pdf_count: 0 }])
+          .select('is_pro, pdf_count')
+          .single();
+
+        profile = perfilFallback;
+      } else {
+        profile = novoPerfil;
+      }
     }
 
     if (profile) {
       isProUser = !!profile.is_pro;
       userPdfCount = profile.pdf_count || 0;
+
+      if (prestadorDocumentoInputEl) {
+        prestadorDocumentoInputEl.value = profile.documento ? formatarDocumento(profile.documento) : '';
+      }
+
+      if (prestadorDocumentoSalvarEl) {
+        prestadorDocumentoSalvarEl.checked = !!profile.documento_salvo;
+      }
 
       if (proBadgeEl) {
         if (isProUser) {
@@ -585,6 +680,8 @@ async function carregarUsuario() {
       userInfoCardEl.classList.add('hidden');
       userInfoCardEl.classList.remove('flex');
     }
+    if (prestadorDocumentoInputEl) prestadorDocumentoInputEl.value = '';
+    if (prestadorDocumentoSalvarEl) prestadorDocumentoSalvarEl.checked = false;
   }
 }
 
@@ -594,6 +691,31 @@ if (btnLogoutEl) {
     pararVerificacaoStatusPro();
     await supabase.auth.signOut();
     window.location.reload();
+  });
+}
+
+if (prestadorDocumentoInputEl) {
+  prestadorDocumentoInputEl.addEventListener('input', (event) => {
+    const valorFormatado = formatarDocumento(event.target.value);
+    event.target.value = valorFormatado;
+
+    if (prestadorDocumentoSalvarEl?.checked) {
+      sincronizarDocumentoPerfil(valorFormatado, true);
+    }
+  });
+}
+
+if (prestadorDocumentoSalvarEl) {
+  prestadorDocumentoSalvarEl.addEventListener('change', async () => {
+    const checked = prestadorDocumentoSalvarEl.checked;
+    const documento = prestadorDocumentoInputEl?.value || '';
+
+    if (checked) {
+      await sincronizarDocumentoPerfil(documento, true);
+      return;
+    }
+
+    await sincronizarDocumentoPerfil(documento, false);
   });
 }
 
@@ -617,6 +739,7 @@ async function gerarPDF() {
 
   const prestadorNome = escaparHTML(document.getElementById('prestador-nome').value.trim());
   const prestadorFone = escaparHTML(document.getElementById('prestador-fone').value.trim());
+  const prestadorDocumento = escaparHTML(limparDocumento(document.getElementById('prestador-documento')?.value || ''));
   const clienteNome = escaparHTML(document.getElementById('cliente-nome').value.trim());
   const clienteFone = escaparHTML(document.getElementById('cliente-fone').value.trim());
   const observacoes = escaparHTML(observacoesEl?.value.trim() || '');
@@ -655,6 +778,7 @@ async function gerarPDF() {
         <p class="font-bold text-indigo-950 uppercase tracking-wider text-[9px] mb-1">PRESTADOR DE SERVIÇO</p>
         <p class="font-bold text-slate-800 text-xs">${prestadorNome}</p>
         ${prestadorFone ? `<p class="text-[10px] text-slate-500 mt-0.5">${prestadorFone}</p>` : ''}
+        ${prestadorDocumento ? `<p class="text-[10px] text-slate-500 mt-0.5">CPF/CNPJ: ${formatarDocumento(prestadorDocumento)}</p>` : ''}
       </div>
 
       <div class="bg-slate-50 p-3 rounded-lg border border-slate-200/60">
