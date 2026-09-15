@@ -759,50 +759,50 @@ async function gerarPDF() {
 
   container.innerHTML = `
   <!-- =====================================================
-       ORÇAFÁCILAPP — TEMPLATE PROFISSIONAL
+       ORÇAFÁCILAPP — TEMPLATE PROFISSIONAL (PDF OPTIMIZED)
        ===================================================== -->
 
   <!-- HEADER -->
-  <div class="relative mb-5 overflow-hidden rounded-2xl bg-white">
+  <div style="position: relative; margin-bottom: 20px; background-color: #ffffff; border-radius: 12px; overflow: hidden;">
 
-    <!-- Barra de identidade -->
-    <div class="absolute left-0 top-0 h-full w-1.5 bg-[#820AD1]"></div>
+    <!-- Barra de identidade lateral -->
+    <div style="position: absolute; left: 0; top: 0; height: 100%; width: 6px; background-color: #820AD1;"></div>
 
-    <div class="flex items-start justify-between border-b border-slate-200 pb-4 pl-4">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #e2e8f0; padding-bottom: 16px; padding-left: 16px;">
 
       <!-- Identidade / Título -->
       <div>
-        <div class="mb-1.5 flex items-center gap-2">
-          <span class="inline-flex items-center rounded-full bg-[#820AD1] px-2.5 py-1 text-[8px] font-extrabold uppercase tracking-widest text-white">
+        <div style="margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+          <span style="background-color: #820AD1; color: #ffffff; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; padding: 3px 8px; border-radius: 9999px; display: inline-block; line-height: 1.2;">
             Proposta Comercial
           </span>
 
-          <span class="text-[8px] font-bold uppercase tracking-wider text-slate-400">
+          <span style="font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; display: inline-block; line-height: 1.2;">
             Orçamento
           </span>
         </div>
 
-        <h1 class="text-[25px] font-black leading-none tracking-[-0.04em] text-slate-900">
+        <h1 style="font-size: 24px; font-weight: 900; color: #0f172a; margin: 0; line-height: 1.2; letter-spacing: -0.5px;">
           ORÇAMENTO
         </h1>
 
-        <p class="mt-1.5 text-[10px] font-medium text-slate-400">
+        <p style="margin-top: 6px; font-size: 11px; font-weight: 500; color: #64748b; margin-bottom: 0;">
           Data de emissão:
-          <span class="font-bold text-slate-600">
+          <span style="font-weight: 700; color: #334155;">
             ${new Date().toLocaleDateString('pt-BR')}
           </span>
         </p>
       </div>
 
-      <!-- Marca -->
-      <div class="text-right">
-        <div class="inline-flex items-center rounded-xl bg-[#820AD1] px-3 py-2 shadow-sm">
-          <span class="text-[10px] font-black tracking-tight text-white">
-            Use OrçaFácilApp
+      <!-- Marca / Selo de Auto Promoção (Garantido no PDF) -->
+      <div style="text-align: right;">
+        <div style="background-color: #1e1b4b; padding: 8px 14px; border-radius: 10px; display: inline-block; border: 1px solid #312e81; min-width: 140px; text-align: center;">
+          <span style="font-size: 11px; font-weight: 900; color: #ffffff; display: block; line-height: 1;">
+            Use <span style="color: #10b981;">OrçaFácil</span>.app
           </span>
         </div>
 
-        <p class="mt-1.5 text-[8px] font-medium text-slate-400">
+        <p style="margin-top: 6px; font-size: 9px; font-weight: 600; color: #64748b; margin-bottom: 0;">
           Gestão simples de orçamentos
         </p>
       </div>
@@ -815,38 +815,37 @@ async function gerarPDF() {
        PRESTADOR + CLIENTE
        ===================================================== -->
 
-  <div class="mb-5 grid grid-cols-[1.45fr_1fr] gap-3">
+  <div style="display: grid; grid-template-columns: 1.3fr 1fr; gap: 12px; margin-bottom: 20px;">
 
     <!-- PRESTADOR -->
-    <div class="relative overflow-hidden rounded-2xl border border-purple-100 bg-purple-50/40 p-4">
+    <div style="position: relative; overflow: hidden; border-radius: 12px; border: 1px solid #e9d5ff; background-color: #faf5ff; padding: 14px;">
 
-      <!-- Elemento roxo lateral -->
-      <div class="absolute left-0 top-0 h-full w-1 bg-[#820AD1]"></div>
+      <div style="position: absolute; left: 0; top: 0; height: 100%; width: 4px; background-color: #820AD1;"></div>
 
-      <div class="pl-2">
+      <div style="padding-left: 6px;">
 
-        <div class="mb-2 flex items-center gap-2">
-          <span class="flex h-5 w-5 items-center justify-center rounded-md bg-[#820AD1] text-[9px] font-black text-white">
+        <div style="margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+          <span style="display: inline-flex; justify-content: center; align-items: center; width: 20px; height: 20px; border-radius: 6px; background-color: #820AD1; color: #ffffff; font-size: 10px; font-weight: 900; line-height: 1;">
             P
           </span>
 
-          <p class="text-[8px] font-extrabold uppercase tracking-[0.14em] text-[#820AD1]">
+          <p style="font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #820AD1; margin: 0; line-height: 1.3;">
             Prestador de Serviço
           </p>
         </div>
 
-        <p class="text-[15px] font-black leading-tight tracking-tight text-slate-900">
+        <p style="font-size: 14px; font-weight: 900; color: #0f172a; margin: 0; line-height: 1.3;">
           ${prestadorNome}
         </p>
 
         ${prestadorFone
       ? `
-              <div class="mt-2 flex items-center gap-1.5">
-                <span class="text-[9px] font-bold text-slate-400">
+              <div style="margin-top: 6px; display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 10px; font-weight: 700; color: #94a3b8;">
                   TEL.
                 </span>
 
-                <span class="text-[10px] font-semibold text-slate-700">
+                <span style="font-size: 11px; font-weight: 600; color: #334155;">
                   ${prestadorFone}
                 </span>
               </div>
@@ -856,12 +855,12 @@ async function gerarPDF() {
 
         ${prestadorDocumento
       ? `
-              <div class="mt-1 flex items-center gap-1.5">
-                <span class="text-[9px] font-bold text-slate-400">
+              <div style="margin-top: 4px; display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 10px; font-weight: 700; color: #94a3b8;">
                   DOC.
                 </span>
 
-                <span class="text-[10px] font-semibold text-slate-700">
+                <span style="font-size: 11px; font-weight: 600; color: #334155;">
                   ${formatarDocumento(prestadorDocumento)}
                 </span>
               </div>
@@ -874,30 +873,30 @@ async function gerarPDF() {
 
 
     <!-- CLIENTE -->
-    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+    <div style="border-radius: 12px; border: 1px solid #e2e8f0; background-color: #f8fafc; padding: 14px;">
 
-      <div class="mb-2 flex items-center gap-2">
-        <span class="flex h-5 w-5 items-center justify-center rounded-md bg-slate-800 text-[9px] font-black text-white">
+      <div style="margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+        <span style="display: inline-flex; justify-content: center; align-items: center; width: 20px; height: 20px; border-radius: 6px; background-color: #1e1b4b; color: #ffffff; font-size: 10px; font-weight: 900; line-height: 1;">
           C
         </span>
 
-        <p class="text-[8px] font-extrabold uppercase tracking-[0.14em] text-slate-500">
+        <p style="font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #475569; margin: 0; line-height: 1.3;">
           Cliente
         </p>
       </div>
 
-      <p class="text-[13px] font-black leading-tight tracking-tight text-slate-900">
+      <p style="font-size: 13px; font-weight: 900; color: #0f172a; margin: 0; line-height: 1.3;">
         ${clienteNome}
       </p>
 
       ${clienteFone
       ? `
-            <div class="mt-2 flex items-center gap-1.5">
-              <span class="text-[9px] font-bold text-slate-400">
+            <div style="margin-top: 6px; display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 10px; font-weight: 700; color: #94a3b8;">
                 TEL.
               </span>
 
-              <span class="text-[10px] font-semibold text-slate-700">
+              <span style="font-size: 11px; font-weight: 600; color: #334155;">
                 ${clienteFone}
               </span>
             </div>
@@ -914,22 +913,22 @@ async function gerarPDF() {
        ITENS DO ORÇAMENTO
        ===================================================== -->
 
-  <div class="mb-5 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_2px_8px_rgba(15,23,42,0.04)]">
+  <div style="margin-bottom: 20px; border-radius: 12px; border: 1px solid #e2e8f0; background-color: #ffffff; overflow: hidden;">
 
     <!-- Título da seção -->
-    <div class="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding: 12px 16px;">
 
       <div>
-        <p class="text-[8px] font-extrabold uppercase tracking-[0.14em] text-[#820AD1]">
+        <p style="font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #820AD1; margin: 0; line-height: 1.2;">
           Detalhamento
         </p>
 
-        <p class="mt-0.5 text-[11px] font-bold text-slate-800">
+        <p style="margin-top: 2px; font-size: 12px; font-weight: 800; color: #0f172a; margin-bottom: 0;">
           Itens do orçamento
         </p>
       </div>
 
-      <span class="rounded-full bg-slate-100 px-2.5 py-1 text-[8px] font-bold uppercase tracking-wider text-slate-500">
+      <span style="background-color: #f1f5f9; padding: 4px 10px; border-radius: 9999px; font-size: 9px; font-weight: 700; text-transform: uppercase; color: #475569; display: inline-block;">
         ${itens.length} ${itens.length === 1 ? 'item' : 'itens'}
       </span>
 
@@ -937,25 +936,25 @@ async function gerarPDF() {
 
 
     <!-- Tabela -->
-    <div class="overflow-x-auto">
-      <table class="w-full border-collapse text-left text-xs">
+    <div style="width: 100%; overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 11px;">
 
         <thead>
-          <tr class="bg-[#820AD1] text-white">
+          <tr style="background-color: #1e1b4b; color: #ffffff;">
 
-            <th class="px-4 py-3 text-[8px] font-extrabold uppercase tracking-wider">
+            <th style="padding: 10px 16px; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
               Descrição
             </th>
 
-            <th class="w-14 px-1 py-3 text-center text-[8px] font-extrabold uppercase tracking-wider">
+            <th style="width: 50px; padding: 10px 4px; text-align: center; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
               Qtd.
             </th>
 
-            <th class="w-24 px-2 py-3 text-right text-[8px] font-extrabold uppercase tracking-wider">
+            <th style="width: 80px; padding: 10px 8px; text-align: right; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
               Preço Un.
             </th>
 
-            <th class="w-24 px-4 py-3 text-right text-[8px] font-extrabold uppercase tracking-wider">
+            <th style="width: 90px; padding: 10px 16px; text-align: right; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
               Subtotal
             </th>
 
@@ -963,24 +962,24 @@ async function gerarPDF() {
         </thead>
 
 
-        <tbody class="divide-y divide-slate-100 bg-white text-[10px]">
+        <tbody style="background-color: #ffffff; font-size: 11px; color: #1e293b;">
 
           ${itens.map((item, index) => `
-            <tr class="${index % 2 === 0 ? 'bg-white' : 'bg-slate-50/60'}">
+            <tr style="border-bottom: 1px solid #f1f5f9; ${index % 2 === 1 ? 'background-color: #f8fafc;' : ''}">
 
-              <td class="px-4 py-3 font-semibold text-slate-800">
+              <td style="padding: 10px 16px; font-weight: 600; color: #1e293b;">
                 ${escaparHTML(item.descricao || 'Item sem descrição')}
               </td>
 
-              <td class="px-1 py-3 text-center font-medium text-slate-500">
+              <td style="padding: 10px 4px; text-align: center; font-weight: 500; color: #64748b;">
                 ${item.qtd}
               </td>
 
-              <td class="px-2 py-3 text-right font-medium text-slate-500">
+              <td style="padding: 10px 8px; text-align: right; font-weight: 500; color: #64748b;">
                 ${formatarMoeda(item.preco)}
               </td>
 
-              <td class="px-4 py-3 text-right font-extrabold text-slate-900">
+              <td style="padding: 10px 16px; text-align: right; font-weight: 800; color: #0f172a;">
                 ${formatarMoeda(item.qtd * item.preco)}
               </td>
 
@@ -1000,21 +999,21 @@ async function gerarPDF() {
 
   ${observacoes
       ? `
-        <div class="mb-5 rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+        <div style="margin-bottom: 20px; border-radius: 12px; border: 1px solid #e2e8f0; background-color: #f8fafc; padding: 14px;">
 
-          <div class="mb-2 flex items-center gap-2">
+          <div style="margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
 
-            <span class="flex h-5 w-5 items-center justify-center rounded-md bg-slate-800 text-[8px] font-black text-white">
+            <span style="display: inline-flex; justify-content: center; align-items: center; width: 18px; height: 18px; border-radius: 4px; background-color: #1e1b4b; color: #ffffff; font-size: 10px; font-weight: 900; line-height: 1;">
               i
             </span>
 
-            <p class="text-[8px] font-extrabold uppercase tracking-[0.14em] text-slate-500">
+            <p style="font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #475569; margin: 0; line-height: 1.3;">
               Observações & Condições
             </p>
 
           </div>
 
-          <p class="whitespace-pre-line pl-7 text-[10px] leading-relaxed text-slate-600">
+          <p style="white-space: pre-line; padding-left: 26px; font-size: 11px; line-height: 1.5; color: #334155; margin: 0;">
             ${observacoes}
           </p>
 
@@ -1028,20 +1027,17 @@ async function gerarPDF() {
        TOTAL — BLOCO ASSIMÉTRICO
        ===================================================== -->
 
-  <div class="mb-5 flex justify-end">
+  <div style="margin-bottom: 20px; display: flex; justify-content: flex-end;">
 
-    <div class="relative w-[72%] overflow-hidden rounded-2xl bg-[#820AD1] px-5 py-4 text-right shadow-[0_6px_18px_rgba(130,10,209,0.16)]">
+    <div style="position: relative; width: 65%; overflow: hidden; border-radius: 12px; background-color: #1e1b4b; padding: 16px 20px; text-align: right; border: 1px solid #312e81;">
 
-      <!-- Detalhe decorativo -->
-      <div class="absolute -right-8 -top-8 h-20 w-20 rounded-full bg-white/10"></div>
+      <div style="position: relative;">
 
-      <div class="relative">
-
-        <span class="mb-1 block text-[8px] font-extrabold uppercase tracking-[0.18em] text-purple-100">
+        <span style="display: block; margin-bottom: 4px; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; color: #a5b4fc;">
           Valor Total
         </span>
 
-        <span class="block text-[25px] font-black leading-none tracking-tight text-emerald-400">
+        <span style="display: block; font-size: 26px; font-weight: 900; line-height: 1; color: #10b981;">
           ${formatarMoeda(subtotal)}
         </span>
 
@@ -1056,27 +1052,27 @@ async function gerarPDF() {
        RODAPÉ
        ===================================================== -->
 
-  <div class="border-t border-slate-200 pt-3">
+  <div style="border-top: 1px solid #e2e8f0; padding-top: 12px;">
 
-    <div class="flex items-center justify-between">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
 
       <div>
-        <p class="text-[8px] font-bold text-slate-400">
+        <p style="font-size: 9px; font-weight: 700; color: #94a3b8; margin: 0;">
           Orçamento válido por 15 dias.
         </p>
 
-        <p class="mt-0.5 text-[8px] text-slate-400">
+        <p style="margin-top: 2px; font-size: 9px; color: #94a3b8; margin-bottom: 0;">
           Documento gerado digitalmente.
         </p>
       </div>
 
-      <div class="text-right">
+      <div style="text-align: right;">
 
-        <p class="text-[8px] font-medium text-slate-400">
+        <p style="font-size: 9px; font-weight: 500; color: #94a3b8; margin: 0;">
           Gerado por
         </p>
 
-        <p class="text-[9px] font-black tracking-tight text-[#820AD1]">
+        <p style="margin-top: 2px; font-size: 10px; font-weight: 900; letter-spacing: -0.2px; color: #1e1b4b; margin-bottom: 0;">
           Use OrçaFácilApp
         </p>
 
