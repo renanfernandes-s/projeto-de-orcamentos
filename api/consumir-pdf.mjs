@@ -1,4 +1,4 @@
-import { supabaseAdmin, autenticarUsuario } from './_payment-utils.mjs';
+import { supabaseAdmin, autenticarUsuario, isUserPro } from './_payment-utils.mjs';
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
@@ -9,9 +9,12 @@ export default async function handler(req, res) {
     const user = await autenticarUsuario(req, res);
     if (!user) return;
 
-    const { data: profile, error: profileError } = await supabaseAdmin.from('profiles').select('is_pro').eq('id', user.id).single();
-    if (profileError) return res.status(500).json({ error: 'Não foi possível validar o limite.' });
-    if (profile?.is_pro) return res.status(200).json({ allowed: true, isPro: true });
+    try {
+        if (await isUserPro(user)) return res.status(200).json({ allowed: true, isPro: true });
+    } catch (error) {
+        console.error('Erro ao validar assinatura PRO:', error.message);
+        return res.status(500).json({ error: 'Não foi possível validar o limite.' });
+    }
 
     const { data, error } = await supabaseAdmin.rpc('consumir_pdf_gratuito', { p_user_id: user.id });
     if (error) return res.status(500).json({ error: 'Não foi possível registrar o PDF.' });

@@ -120,6 +120,7 @@ export default async function handler(req, res) {
                 updated_at: new Date().toISOString()
             })
             .eq('payment_id', paymentId)
+            .not('status', 'in', '(RECEIVED,CONFIRMED)')
             .select('id');
 
         if (attemptError) {
@@ -128,15 +129,12 @@ export default async function handler(req, res) {
         }
 
         if (!updatedAttempt?.length) {
-            console.warn(`⚠️ Nenhuma tentativa de pagamento encontrada em payment_attempts para o payment_id: ${paymentId}`);
+            console.log(`ℹ️ Pagamento ${paymentId} já processado ou sem tentativa local; validando concessão idempotente.`);
         }
 
-        // 6. ATUALIZAÇÃO DO STATUS PRO DO USUÁRIO
+        // 6. CONCESSÃO MANUAL DE 30 DIAS, EM UTC, SOMANDO AO PERÍODO VIGENTE
         const { data: updatedProfile, error: profileError } = await supabaseAdmin
-            .from('profiles')
-            .update({ is_pro: true })
-            .eq('id', targetUserId)
-            .select('id');
+            .rpc('conceder_periodo_pro', { p_user_id: targetUserId, p_payment_id: paymentId });
 
         if (profileError) {
             console.error('❌ Erro ao atualizar status PRO no Supabase:', profileError);

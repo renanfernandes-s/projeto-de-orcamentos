@@ -6,6 +6,7 @@ import { supabase, atualizarSenha } from './supabase.js';
 let currentUser = null;
 let isProUser = false;
 let userPdfCount = 0;
+let planExpiresAt = null;
 let pdfWorkerAtual = null;
 let nomeArquivoAtual = 'orcamento.pdf';
 let intervalProId = null; // Guard do ID do polling
@@ -605,6 +606,26 @@ function pararVerificacaoStatusPro() {
   }
 }
 
+function atualizarAvisoVencimento(expiresAt) {
+  const avisoEl = document.getElementById('aviso-vencimento-pro');
+  if (!avisoEl) return;
+
+  planExpiresAt = expiresAt ? new Date(expiresAt) : null;
+  if (!isProUser || !planExpiresAt || Number.isNaN(planExpiresAt.valueOf())) {
+    avisoEl.classList.add('hidden');
+    return;
+  }
+
+  const diasRestantes = (planExpiresAt.getTime() - Date.now()) / 86400000;
+  if (diasRestantes > 0 && diasRestantes <= 5) {
+    const dataFormatada = planExpiresAt.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+    avisoEl.textContent = `Seu plano PRO vence em ${dataFormatada}. Faça um novo pagamento manual para continuar usando o acesso ilimitado.`;
+    avisoEl.classList.remove('hidden');
+  } else {
+    avisoEl.classList.add('hidden');
+  }
+}
+
 // --- Integração com Supabase (Sessão do Usuário) ---
 async function carregarUsuario() {
   const { data: { user } } = await supabase.auth.getUser();
@@ -620,7 +641,7 @@ async function carregarUsuario() {
 
     let profileQuery = supabase
       .from('profiles')
-      .select('is_pro, pdf_count, documento, documento_salvo')
+      .select('is_pro, plan_status, plan_started_at, plan_expires_at, pdf_count, documento, documento_salvo')
       .eq('id', user.id)
       .single();
 
@@ -655,7 +676,11 @@ async function carregarUsuario() {
     }
 
     if (profile) {
-      isProUser = !!profile.is_pro;
+      planExpiresAt = profile.plan_expires_at ? new Date(profile.plan_expires_at) : null;
+      isProUser = profile.plan_status === 'active'
+        && planExpiresAt instanceof Date
+        && !Number.isNaN(planExpiresAt.valueOf())
+        && planExpiresAt > new Date();
       userPdfCount = profile.pdf_count || 0;
 
       if (prestadorDocumentoInputEl) {
@@ -673,6 +698,7 @@ async function carregarUsuario() {
           proBadgeEl.classList.add('hidden');
         }
       }
+      atualizarAvisoVencimento(profile.plan_expires_at);
     }
   } else {
     if (btnGoLoginEl) btnGoLoginEl.classList.remove('hidden');
@@ -682,6 +708,7 @@ async function carregarUsuario() {
     }
     if (prestadorDocumentoInputEl) prestadorDocumentoInputEl.value = '';
     if (prestadorDocumentoSalvarEl) prestadorDocumentoSalvarEl.checked = false;
+    atualizarAvisoVencimento(null);
   }
 }
 

@@ -34,7 +34,7 @@ O **OrçaFácil** é um Micro-SaaS projetado para ajudar prestadores de serviço
 * **Autenticação:** Gerenciada pelo Supabase Auth com modal responsivo em Tailwind CSS.
 * **Controle de Acesso (RLS):** Políticas aplicadas na tabela `public.profiles` para garantir que o usuário acesse apenas seus próprios dados.
 * **Gatilho de Cadastro (`Trigger`):** Função `on_auth_user_created` no PostgreSQL para criar automaticamente a linha do perfil assim que o e-mail é registrado.
-* **Gestão de Assinatura:** Coluna `is_pro` vinculada ao ID do usuário para liberação de uso ilimitado.
+* **Gestão de Assinatura:** Plano PRO manual por períodos de 30 dias, com validade em UTC e renovação somente após novo pagamento confirmado.
 
 
 ## 🚀 Como Rodar Localmente
@@ -52,4 +52,5 @@ Carregando...
 
 - Configure as variáveis de `.env.example` no ambiente da Vercel. Nunca versione ou compartilhe o arquivo `.env`.
 - Aplique `supabase/migrations/202609140001_payment_safety.sql` no projeto Supabase antes de publicar as rotas de pagamento.
+- Aplique também `supabase/migrations/202609160001_manual_subscription.sql` para habilitar a validade manual de 30 dias.
 - Configure o webhook do Asaas para `/api/webhook-asaas` usando o valor de `ASAAS_WEBHOOK_TOKEN`.

@@ -9,6 +9,20 @@ export const ASAAS_BASE_URL = process.env.ASAAS_URL;
 if (!ASAAS_BASE_URL) throw new Error('ASAAS_URL não configurada.');
 export const PLANO_PRO_VALOR = 14.90;
 export const PLANO_PRO_DESCRICAO = 'Assinatura OrçaFácilApp PRO';
+export const PLANO_PRO_DIAS = 30;
+
+export async function isUserPro(user) {
+    const { data: profile, error } = await supabaseAdmin
+        .from('profiles')
+        .select('plan_status, plan_expires_at')
+        .eq('id', user.id)
+        .single();
+
+    if (error) throw error;
+
+    const expiresAt = profile?.plan_expires_at ? new Date(profile.plan_expires_at) : null;
+    return profile?.plan_status === 'active' && expiresAt instanceof Date && !Number.isNaN(expiresAt.valueOf()) && expiresAt > new Date();
+}
 
 export async function autenticarUsuario(req, res) {
     const authHeader = req.headers.authorization;
