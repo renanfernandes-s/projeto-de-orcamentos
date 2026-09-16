@@ -863,34 +863,39 @@ async function gerarPDF() {
        ORÇAFÁCILAPP — TEMPLATE PDF ALINHADO E OTIMIZADO
        ===================================================== -->
 
-  <!-- HEADER -->
-  <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 16px;">
-    <div>
-      <div style="margin-bottom: 6px;">
-        <span style="background-color: #1e1b4b; color: #ffffff; font-size: 9px; font-weight: 800; text-transform: uppercase; padding: 4px 8px; border-radius: 4px; display: inline-block;">
-          PROPOSTA COMERCIAL
-        </span>
-      </div>
-      <h1 style="font-size: 22px; font-weight: 900; color: #0f172a; margin: 0; padding: 0; line-height: 1.1;">
-        ORÇAMENTO
-      </h1>
-      <p style="font-size: 10px; font-weight: 500; color: #64748b; margin: 4px 0 0 0;">
-        Data de emissão: <strong style="color: #334155;">${new Date().toLocaleDateString("pt-BR")}</strong>
-      </p>
-    </div>
+  <!-- HEADER COMPATÍVEL COM PDF -->
+<div style="width: 100%; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 16px;">
+  <table style="width: 100%; border-collapse: collapse; margin: 0; padding: 0;">
+    <tr>
+      <!-- LADO ESQUERDO: TÍTULO E DATA -->
+      <td style="vertical-align: top; text-align: left;">
+        <div style="margin-bottom: 6px;">
+          <span style="background-color: #1e1b4b; color: #ffffff; font-size: 9px; font-weight: 800; text-transform: uppercase; padding: 4px 8px; border-radius: 4px; display: inline-block;">
+            PROPOSTA COMERCIAL
+          </span>
+        </div>
+        <h1 style="font-size: 22px; font-weight: 900; color: #0f172a; margin: 0; padding: 0; line-height: 1.1;">
+          ORÇAMENTO
+        </h1>
+        <p style="font-size: 10px; font-weight: 500; color: #64748b; margin: 4px 0 0 0;">
+          Data de emissão: <strong style="color: #334155;">${new Date().toLocaleDateString('pt-BR')}</strong>
+        </p>
+      </td>
 
-    <div style="text-align: right;">
-      <!-- SELO AZUL ESCURO (CORRIGIDO: Cores e visibilidade explícitas) -->
-      <div style="background-color: #1e1b4b; border-radius: 6px; padding: 8px 12px; display: inline-block;">
-        <span style="font-size: 11px; font-weight: 900; color: #ffffff !important; display: block; line-height: 1;">
-          <span style="color: #ffffff !important;">Use</span><span style="color: #10b981 !important;">OrçaFácil</span><span style="color: #ffffff !important;">App</span>
-        </span>
-      </div>
-      <p style="font-size: 8px; font-weight: 600; color: #64748b; margin: 4px 0 0 0;">
-        Gestão simples de orçamentos
-      </p>
-    </div>
-  </div>
+      <!-- LADO DIREITO: LOGO E SUBTÍTULO -->
+      <td style="vertical-align: top; text-align: right;">
+        <div style="background-color: #1e1b4b; border-radius: 6px; padding: 8px 12px; display: inline-block;">
+          <span style="font-size: 11px; font-weight: 900; color: #ffffff !important; display: block; line-height: 1;">
+            <span style="color: #ffffff !important;">Use</span><span style="color: #10b981 !important;">OrçaFácil</span><span style="color: #ffffff !important;">App</span>
+          </span>
+        </div>
+        <p style="font-size: 8px; font-weight: 600; color: #64748b; margin: 4px 0 0 0;">
+          Gestão simples de orçamentos
+        </p>
+      </td>
+    </tr>
+  </table>
+</div>
 
   <!-- PRESTADOR + CLIENTE -->
   <div style="display: flex; gap: 12px; margin-bottom: 16px;">
