@@ -786,190 +786,138 @@ async function gerarPDF() {
 
   container.innerHTML = `
   <!-- =====================================================
-       ORÇAFÁCILAPP — TEMPLATE PDF 100% COMPATÍVEL (LAYOUT TABULAR)
+       ORÇAFÁCILAPP — TEMPLATE PDF ALINHADO E OTIMIZADO
        ===================================================== -->
 
   <!-- HEADER -->
-  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 16px; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px;">
-    <tr>
-      <td valign="top" align="left">
-        <div style="margin-bottom: 6px;">
-          <span style="background-color: #1e1b4b; color: #ffffff; font-size: 9px; font-weight: 800; text-transform: uppercase; padding: 4px 8px; border-radius: 4px; display: inline-block;">
-            PROPOSTA COMERCIAL
-          </span>
-          <span style="font-size: 9px; font-weight: 700; text-transform: uppercase; color: #64748b; margin-left: 6px;">
-            ORÇAMENTO
-          </span>
-        </div>
-        <h1 style="font-size: 22px; font-weight: 900; color: #0f172a; margin: 0; padding: 0; line-height: 1.1;">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 16px;">
+    <div>
+      <div style="margin-bottom: 6px;">
+        <span style="background-color: #1e1b4b; color: #ffffff; font-size: 9px; font-weight: 800; text-transform: uppercase; padding: 4px 8px; border-radius: 4px; display: inline-block;">
+          PROPOSTA COMERCIAL
+        </span>
+        <span style="font-size: 9px; font-weight: 700; text-transform: uppercase; color: #64748b; margin-left: 6px;">
           ORÇAMENTO
-        </h1>
-        <p style="font-size: 10px; font-weight: 500; color: #64748b; margin: 4px 0 0 0;">
-          Data de emissão: <strong style="color: #334155;">${new Date().toLocaleDateString('pt-BR')}</strong>
-        </p>
-      </td>
-      <td valign="top" align="right" width="160">
-        <!-- SELO AZUL ESCURO - GARANTIDO NO PDF -->
-        <table border="0" cellspacing="0" cellpadding="0" style="background-color: #1e1b4b; border-radius: 6px; width: 150px;">
-          <tr>
-            <td align="center" style="padding: 8px 10px;">
-              <span style="font-size: 11px; font-weight: 900; color: #ffffff; display: block; line-height: 1;">
-                Use <span style="color: #10b981;">OrçaFácil</span>.app
-              </span>
-            </td>
-          </tr>
-        </table>
-        <p style="font-size: 8px; font-weight: 600; color: #64748b; margin: 4px 0 0 0; text-align: right;">
-          Gestão simples de orçamentos
-        </p>
-      </td>
-    </tr>
-  </table>
+        </span>
+      </div>
+      <h1 style="font-size: 22px; font-weight: 900; color: #0f172a; margin: 0; padding: 0; line-height: 1.1;">
+        ORÇAMENTO
+      </h1>
+      <p style="font-size: 10px; font-weight: 500; color: #64748b; margin: 4px 0 0 0;">
+        Data de emissão: <strong style="color: #334155;">${new Date().toLocaleDateString('pt-BR')}</strong>
+      </p>
+    </div>
 
+    <div style="text-align: right;">
+      <!-- SELO AZUL ESCURO (CORRIGIDO: UseOrçaFácilApp) -->
+      <div style="background-color: #1e1b4b; border-radius: 6px; padding: 8px 12px; display: inline-block;">
+        <span style="font-size: 11px; font-weight: 900; color: #ffffff; display: block; line-height: 1;">
+          Use<span style="color: #10b981;">OrçaFácil</span>App
+        </span>
+      </div>
+      <p style="font-size: 8px; font-weight: 600; color: #64748b; margin: 4px 0 0 0;">
+        Gestão simples de orçamentos
+      </p>
+    </div>
+  </div>
 
   <!-- PRESTADOR + CLIENTE -->
-  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 16px;">
-    <tr>
-      <!-- PRESTADOR -->
-      <td width="58%" valign="top" style="padding-right: 6px;">
-        <table width="100%" border="0" cellspacing="0" cellpadding="10" style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-left: 4px solid #1e1b4b; border-radius: 6px;">
-          <tr>
-            <td>
-              <p style="font-size: 9px; font-weight: 800; text-transform: uppercase; color: #1e1b4b; margin: 0 0 6px 0; line-height: 1.2;">
-                [P] PRESTADOR DE SERVIÇO
-              </p>
-              <p style="font-size: 13px; font-weight: 900; color: #0f172a; margin: 0 0 4px 0; line-height: 1.2;">
-                ${prestadorNome}
-              </p>
-              ${prestadorFone ? `<p style="font-size: 10px; color: #475569; margin: 2px 0 0 0;"><strong>TEL.</strong> ${prestadorFone}</p>` : ''}
-              ${prestadorDocumento ? `<p style="font-size: 10px; color: #475569; margin: 2px 0 0 0;"><strong>DOC.</strong> ${formatarDocumento(prestadorDocumento)}</p>` : ''}
-            </td>
-          </tr>
-        </table>
-      </td>
+  <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+    <!-- PRESTADOR -->
+    <div style="flex: 1.3; background-color: #f8fafc; border: 1px solid #cbd5e1; border-left: 4px solid #1e1b4b; border-radius: 6px; padding: 10px;">
+      <p style="font-size: 9px; font-weight: 800; text-transform: uppercase; color: #1e1b4b; margin: 0 0 6px 0; line-height: 1.2;">
+        [P] PRESTADOR DE SERVIÇO
+      </p>
+      <p style="font-size: 13px; font-weight: 900; color: #0f172a; margin: 0 0 4px 0; line-height: 1.2;">
+        ${prestadorNome}
+      </p>
+      ${prestadorFone ? `<p style="font-size: 10px; color: #475569; margin: 2px 0 0 0;"><strong>TEL.</strong> ${prestadorFone}</p>` : ''}
+      ${prestadorDocumento ? `<p style="font-size: 10px; color: #475569; margin: 2px 0 0 0;"><strong>DOC.</strong> ${formatarDocumento(prestadorDocumento)}</p>` : ''}
+    </div>
 
-      <!-- CLIENTE -->
-      <td width="42%" valign="top" style="padding-left: 6px;">
-        <table width="100%" border="0" cellspacing="0" cellpadding="10" style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px;">
-          <tr>
-            <td>
-              <p style="font-size: 9px; font-weight: 800; text-transform: uppercase; color: #475569; margin: 0 0 6px 0; line-height: 1.2;">
-                [C] CLIENTE
-              </p>
-              <p style="font-size: 12px; font-weight: 900; color: #0f172a; margin: 0 0 4px 0; line-height: 1.2;">
-                ${clienteNome}
-              </p>
-              ${clienteFone ? `<p style="font-size: 10px; color: #475569; margin: 2px 0 0 0;"><strong>TEL.</strong> ${clienteFone}</p>` : ''}
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-
+    <!-- CLIENTE -->
+    <div style="flex: 1; background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px;">
+      <p style="font-size: 9px; font-weight: 800; text-transform: uppercase; color: #475569; margin: 0 0 6px 0; line-height: 1.2;">
+        [C] CLIENTE
+      </p>
+      <p style="font-size: 12px; font-weight: 900; color: #0f172a; margin: 0 0 4px 0; line-height: 1.2;">
+        ${clienteNome}
+      </p>
+      ${clienteFone ? `<p style="font-size: 10px; color: #475569; margin: 2px 0 0 0;"><strong>TEL.</strong> ${clienteFone}</p>` : ''}
+    </div>
+  </div>
 
   <!-- TABELA DE ITENS -->
-  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 16px; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden;">
-    <!-- Título do Bloco -->
-    <tr>
-      <td style="background-color: #ffffff; padding: 10px 12px; border-bottom: 1px solid #e2e8f0;">
-        <table width="100%" border="0" cellspacing="0" cellpadding="0">
-          <tr>
-            <td align="left">
-              <span style="font-size: 9px; font-weight: 800; text-transform: uppercase; color: #1e1b4b; display: block;">DETALHAMENTO</span>
-              <span style="font-size: 11px; font-weight: 800; color: #0f172a;">Itens do orçamento</span>
+  <div style="border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; margin-bottom: 16px;">
+    <div style="background-color: #ffffff; padding: 10px 12px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <span style="font-size: 9px; font-weight: 800; text-transform: uppercase; color: #1e1b4b; display: block;">DETALHAMENTO</span>
+        <span style="font-size: 11px; font-weight: 800; color: #0f172a;">Itens do orçamento</span>
+      </div>
+      <span style="background-color: #e2e8f0; padding: 3px 8px; border-radius: 4px; font-size: 9px; font-weight: 700; color: #334155;">
+        ${itens.length} ${itens.length === 1 ? 'item' : 'itens'}
+      </span>
+    </div>
+
+    <table width="100%" border="0" cellspacing="0" cellpadding="8" style="border-collapse: collapse; font-size: 11px;">
+      <thead>
+        <tr style="background-color: #1e1b4b; color: #ffffff; font-size: 9px; text-transform: uppercase;">
+          <th align="left" style="padding: 8px 12px;">Descrição</th>
+          <th align="center" width="50" style="padding: 8px 4px;">Qtd.</th>
+          <th align="right" width="90" style="padding: 8px 8px;">Preço Un.</th>
+          <th align="right" width="100" style="padding: 8px 12px;">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${itens.map((item, index) => `
+          <tr style="border-bottom: 1px solid #f1f5f9; ${index % 2 === 1 ? 'background-color: #f8fafc;' : 'background-color: #ffffff;'}">
+            <td align="left" style="padding: 8px 12px; font-weight: 600; color: #1e293b;">
+              ${escaparHTML(item.descricao || 'Item sem descrição')}
             </td>
-            <td align="right">
-              <span style="background-color: #e2e8f0; padding: 3px 8px; border-radius: 4px; font-size: 9px; font-weight: 700; color: #334155;">
-                ${itens.length} ${itens.length === 1 ? 'item' : 'itens'}
-              </span>
-            </td>
+            <td align="center" style="padding: 8px 4px; color: #64748b;">${item.qtd}</td>
+            <td align="right" style="padding: 8px 8px; color: #64748b;">${formatarMoeda(item.preco)}</td>
+            <td align="right" style="padding: 8px 12px; font-weight: 800; color: #0f172a;">${formatarMoeda(item.qtd * item.preco)}</td>
           </tr>
-        </table>
-      </td>
-    </tr>
-
-    <!-- Listagem de Itens -->
-    <tr>
-      <td>
-        <table width="100%" border="0" cellspacing="0" cellpadding="8" style="border-collapse: collapse; font-size: 11px;">
-          <thead>
-            <tr style="background-color: #1e1b4b; color: #ffffff; font-size: 9px; text-transform: uppercase;">
-              <th align="left" style="padding: 8px 12px;">Descrição</th>
-              <th align="center" width="50" style="padding: 8px 4px;">Qtd.</th>
-              <th align="right" width="80" style="padding: 8px 8px;">Preço Un.</th>
-              <th align="right" width="90" style="padding: 8px 12px;">Subtotal</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${itens.map((item, index) => `
-              <tr style="border-bottom: 1px solid #f1f5f9; ${index % 2 === 1 ? 'background-color: #f8fafc;' : 'background-color: #ffffff;'}">
-                <td align="left" style="padding: 8px 12px; font-weight: 600; color: #1e293b;">
-                  ${escaparHTML(item.descricao || 'Item sem descrição')}
-                </td>
-                <td align="center" style="padding: 8px 4px; color: #64748b;">${item.qtd}</td>
-                <td align="right" style="padding: 8px 8px; color: #64748b;">${formatarMoeda(item.preco)}</td>
-                <td align="right" style="padding: 8px 12px; font-weight: 800; color: #0f172a;">${formatarMoeda(item.qtd * item.preco)}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      </td>
-    </tr>
-  </table>
-
+        `).join('')}
+      </tbody>
+    </table>
+  </div>
 
   <!-- OBSERVAÇÕES -->
   ${observacoes ? `
-    <table width="100%" border="0" cellspacing="0" cellpadding="10" style="margin-bottom: 16px; background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px;">
-      <tr>
-        <td>
-          <p style="font-size: 9px; font-weight: 800; text-transform: uppercase; color: #475569; margin: 0 0 4px 0;">
-            [i] OBSERVAÇÕES & CONDIÇÕES
-          </p>
-          <p style="white-space: pre-line; font-size: 10px; line-height: 1.4; color: #334155; margin: 0;">
-            ${observacoes}
-          </p>
-        </td>
-      </tr>
-    </table>
+    <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px; margin-bottom: 16px;">
+      <p style="font-size: 9px; font-weight: 800; text-transform: uppercase; color: #475569; margin: 0 0 4px 0;">
+        [i] OBSERVAÇÕES & CONDIÇÕES
+      </p>
+      <p style="white-space: pre-line; font-size: 10px; line-height: 1.4; color: #334155; margin: 0;">
+        ${observacoes}
+      </p>
+    </div>
   ` : ''}
 
+  <!-- VALOR TOTAL (ALINHAMENTO CORRIGIDO) -->
+  <div style="display: flex; justify-content: flex-end; margin-bottom: 16px;">
+    <div style="background-color: #1e1b4b; border-radius: 6px; padding: 12px 18px; text-align: right; min-width: 220px;">
+      <span style="font-size: 9px; font-weight: 800; text-transform: uppercase; color: #93c5fd; display: block; margin-bottom: 2px;">
+        VALOR TOTAL
+      </span>
+      <span style="font-size: 22px; font-weight: 900; color: #10b981; display: block; line-height: 1;">
+        ${formatarMoeda(subtotal)}
+      </span>
+    </div>
+  </div>
 
-  <!-- VALOR TOTAL -->
-  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 16px;">
-    <tr>
-      <td align="right">
-        <table width="60%" border="0" cellspacing="0" cellpadding="12" style="background-color: #1e1b4b; border-radius: 6px; text-align: right;">
-          <tr>
-            <td>
-              <span style="font-size: 9px; font-weight: 800; text-transform: uppercase; color: #93c5fd; display: block; margin-bottom: 2px;">
-                VALOR TOTAL
-              </span>
-              <span style="font-size: 22px; font-weight: 900; color: #10b981; display: block; line-height: 1;">
-                ${formatarMoeda(subtotal)}
-              </span>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-
-
-  <!-- RODAPÉ -->
-  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-top: 1px solid #e2e8f0; padding-top: 10px;">
-    <tr>
-      <td align="left" style="font-size: 8px; color: #94a3b8;">
-        <p style="margin: 0; font-weight: 700;">Orçamento válido por 15 dias.</p>
-        <p style="margin: 2px 0 0 0;">Documento gerado digitalmente.</p>
-      </td>
-      <td align="right" style="font-size: 8px; color: #94a3b8;">
-        <p style="margin: 0;">Gerado por</p>
-        <p style="margin: 2px 0 0 0; font-size: 9px; font-weight: 900; color: #1e1b4b;">Use OrçaFácilApp</p>
-      </td>
-    </tr>
-  </table>
+  <!-- RODAPÉ (NOME E ALINHAMENTO CORRIGIDOS) -->
+  <div style="display: flex; justify-content: space-between; align-items: flex-end; border-top: 1px solid #e2e8f0; padding-top: 10px; font-size: 8px; color: #94a3b8;">
+    <div>
+      <p style="margin: 0; font-weight: 700;">Orçamento válido por 15 dias.</p>
+      <p style="margin: 2px 0 0 0;">Documento gerado digitalmente.</p>
+    </div>
+    <div style="text-align: right;">
+      <p style="margin: 0;">Gerado por</p>
+      <p style="margin: 2px 0 0 0; font-size: 9px; font-weight: 900; color: #1e1b4b;">UseOrçaFácilApp</p>
+    </div>
+  </div>
 `;
 
   nomeArquivoAtual = `orcamento-${clienteNomeOriginal.toLowerCase().replace(/\s+/g, '-')}.pdf`;
