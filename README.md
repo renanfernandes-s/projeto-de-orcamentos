@@ -1,56 +1,168 @@
 # 📄 OrçaFácil — Gerador de Orçamentos Profissionais
 
-O **OrçaFácil** é um Micro-SaaS projetado para ajudar prestadores de serviços e autônomos (eletricistas, pintores, manicures, freelancers) a criarem orçamentos profissionais e enviarem direto para os seus clientes via WhatsApp ou PDF.
+O OrçaFácil é uma aplicação web para prestadores de serviços criarem orçamentos profissionais, personalizarem dados do cliente e enviarem tudo rapidamente por WhatsApp ou PDF.
+
+A solução foi pensada para uso mobile-first, com foco em profissionais autônomos e pequenas empresas que precisam gerar propostas sem burocracia.
 
 ---
 
-## 🛠️ Tecnologias e Infraestrutura
+## 🧩 Stack
 
-* **Frontend:** HTML5, Tailwind CSS, JavaScript (Vanilla ES6+)
-* **Hospedagem:** Vercel (Deploy contínuo via GitHub)
-* **Domínio & SSL:** `useorcafacilapp.com.br` via Registro.br e Vercel
-* **Banco de Dados & Auth:** Supabase (PostgreSQL, Row Level Security - RLS)
-* **Pagamentos:** Asaas (Pix e cartão de crédito para o plano PRO)
+- Frontend: HTML, JavaScript vanilla, Tailwind CSS
+- Build e serve: Vite
+- Banco e autenticação: Supabase
+- Pagamentos: Asaas
+- Deploy: Vercel
 
 ---
 
-## 📌 Funcionalidades Implementadas
+## ✅ Funcionalidades principais
 
-### 1. Configuração, Arquitetura Base & Deploy
-- [x] **Ambiente e Stack Leve:** Estruturação nativa com HTML5, JavaScript Vanilla (ES6+) e Tailwind CSS, garantindo alta performance sem dependência de build pesado.
-- [x] **Integração Backend & Banco de Dados:** Conexão com o ecossistema Supabase (Auth, PostgreSQL, Row Level Security e Triggers automatizadas).
-- [x] **Layout Mobile-First & Preview:** Interface responsiva otimizada para uso em smartphones no campo e visualização simultânea do documento A4 em telas maiores.
-- [x] **Pipeline de Deploy Contínuo:** Integração do repositório GitHub com a Vercel e configuração do domínio personalizado (`useorcafacilapp.com.br`).
+- Criação de orçamento com dados do prestador e do cliente
+- Adição dinâmica de itens/serviços
+- Cálculo automático de subtotal, descontos e total
+- Pré-visualização do documento em layout A4
+- Geração de PDF do orçamento
+- Envio do orçamento via WhatsApp
+- Login e autenticação com Supabase
+- Plano PRO com controle de assinatura manual
+- Aviso visual quando a assinatura está prestes a vencer
+- Armazenamento de documentos e perfil do usuário
 
-### 2. Interface Dinâmica, Motor de Cálculos e Controle de Acesso
-- [x] **Preenchimento em Tempo Real:** Edição simultânea dos dados do prestador, cliente e observações refletida instantaneamente na visualização A4.
-- [x] **Tabela Dinâmica de Itens:** Adição e remoção interativa de serviços e produtos.
-- [x] **Cálculo Automático de Subtotais:** Atualização em tempo real do cálculo (Quantidade × Valor Unitário) e da soma total da proposta.
-- [x] **Validação de Acesso & Limite Gratuito:** Verificação do status de usuário através do banco de dados (Supabase Auth/RLS).
-- [x] **Checkout Pix e Cartão & Autenticação:** Modal integrado para login/cadastro e pagamento do Plano PRO via Pix ou checkout seguro de cartão.
+---
 
-## 🔐 Arquitetura de Segurança & Dados
+## 🔐 Fluxo de assinatura e segurança
 
-* **Autenticação:** Gerenciada pelo Supabase Auth com modal responsivo em Tailwind CSS.
-* **Controle de Acesso (RLS):** Políticas aplicadas na tabela `public.profiles` para garantir que o usuário acesse apenas seus próprios dados.
-* **Gatilho de Cadastro (`Trigger`):** Função `on_auth_user_created` no PostgreSQL para criar automaticamente a linha do perfil assim que o e-mail é registrado.
-* **Gestão de Assinatura:** Plano PRO manual por períodos de 30 dias, com validade em UTC e renovação somente após novo pagamento confirmado.
+A aplicação usa o Supabase para autenticação e armazenamento de perfil do usuário. O perfil contém flags como `is_pro`, `plan_status`, `plan_started_at`, `plan_expires_at` e dados do documento do prestador.
 
+O plano PRO pode ser ativado por pagamento manual via Asaas, com data de validade registrada no banco. A verificação do acesso é feita no frontend e no perfil do usuário, e o aviso de vencimento aparece quando a assinatura está próxima do fim.
 
-## 🚀 Como Rodar Localmente
+A estrutura de migrações em `supabase/migrations/` cobre regras de segurança e períodos de assinatura manual.
+
+---
+
+## 🚀 Como rodar localmente
 
 1. Clone o repositório:
-   ```bash
-   git clone [https://github.com/renanfernandes-s/orcafacil.git](https://github.com/renanfernandes-s/orcafacil.git)
+
+```bash
+git clone <url-do-repositorio>
+cd orcafacil
+```
+
+2. Instale as dependências:
+
+```bash
+npm install
+```
+
+3. Inicie o ambiente de desenvolvimento:
+
+```bash
+npm run dev
+```
+
+4. Para gerar o build de produção:
+
+```bash
+npm run build
+```
+
+5. Para visualizar o build gerado:
+
+```bash
+npm run preview
+```
+
 ---
 
-## 📂 Estrutura de Pastas Atual
+## 📁 Estrutura do projeto
 
-Carregando...
+```text
+orcafacil/
+├── api/                          # Rotas e integrações de backend
+│   ├── _payment-utils.mjs
+│   ├── consumir-pdf.mjs
+│   ├── gerar-checkout.mjs
+│   ├── gerar-pix.mjs
+│   ├── status-pagamento.mjs
+│   └── webhook-asaas.mjs
+├── public/                      # Assets públicos
+├── src/                         # Código do frontend
+│   ├── assets/
+│   ├── main.js
+│   ├── style.css
+│   ├── counter.js
+│   ├── login.js
+│   └── supabase.js
+├── supabase/
+│   └── migrations/
+├── index.html
+├── login.html
+├── package.json
+├── postcss.config.js
+├── tailwind.config.js
+├── vite.config.js
+├── vercel.json
+├── README.md
+└── .gitignore
+```
 
-## 🔧 Operação de Pagamentos
+---
 
-- Configure as variáveis de `.env.example` no ambiente da Vercel. Nunca versione ou compartilhe o arquivo `.env`.
-- Aplique `supabase/migrations/202609140001_payment_safety.sql` no projeto Supabase antes de publicar as rotas de pagamento.
-- Aplique também `supabase/migrations/202609160001_manual_subscription.sql` para habilitar a validade manual de 30 dias.
-- Configure o webhook do Asaas para `/api/webhook-asaas` usando o valor de `ASAAS_WEBHOOK_TOKEN`.
+## 🔧 Variáveis de ambiente
+
+Este projeto depende de variáveis de ambiente para autenticação e pagamentos. No ambiente de produção/Vercel, configure as chaves e URLs necessárias para:
+
+- Supabase
+- Asaas
+- Webhook do Asaas
+
+O arquivo `.env` não deve ser versionado.
+
+Exemplo conceitual:
+
+```env
+VITE_SUPABASE_URL="https://xxxxx.supabase.co"
+VITE_SUPABASE_ANON_KEY="xxxxx"
+ASAAS_API_KEY="xxxxx"
+ASAAS_WEBHOOK_TOKEN="xxxxx"
+```
+
+Os nomes exatos podem variar conforme a implementação do projeto e o ambiente em que for publicado.
+
+---
+
+## 💳 Pagamentos e assinatura PRO
+
+- O fluxo de pagamento do plano PRO foi integrado com o Asaas.
+- A assinatura é controlada por data de expiração e status do perfil.
+- O usuário só é considerado PRO quando o status está ativo e a data de expiração ainda é válida.
+- O aviso de vencimento aparece quando a assinatura está próxima do fim, no topo da tela do usuário logado.
+
+Migrations relevantes no projeto:
+
+- `supabase/migrations/202609140001_payment_safety.sql`
+- `supabase/migrations/202609150001_professional_document.sql`
+- `supabase/migrations/202609160001_manual_subscription.sql`
+
+---
+
+## 🧪 Observações de uso
+
+- O app foi pensado para funcionar em celular e desktop, mantendo a experiência mobile-first.
+- O documento final pode ser exportado em PDF e compartilhado pelo WhatsApp.
+- O fluxo de assinatura manual foi desenhado para facilitar o controle de acesso sem depender de renovação automática ou recorrência complexa.
+
+---
+
+## 📌 Dica de manutenção
+
+Ao alterar a lógica de pagamento ou assinatura, verifique sempre:
+
+1. `plan_status`
+2. `plan_expires_at`
+3. `is_pro`
+4. o banner de vencimento em `index.html` e `src/main.js`
+
+Isso garante que o comportamento da assinatura continue consistente para usuários novos e antigos.
