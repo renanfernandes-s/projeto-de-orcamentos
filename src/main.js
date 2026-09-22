@@ -27,6 +27,10 @@ const prestadorDocumentoInputEl = document.getElementById(
 const prestadorDocumentoSalvarEl = document.getElementById(
   "prestador-documento-salvar",
 );
+const prestadorNomeInputEl = document.getElementById("prestador-nome");
+const prestadorFoneInputEl = document.getElementById("prestador-fone");
+const prestadorNomeSalvarEl = document.getElementById("prestador-nome-salvar");
+const prestadorFoneSalvarEl = document.getElementById("prestador-fone-salvar");
 
 const listaItensEl = document.getElementById("lista-itens");
 const btnAddItemEl = document.getElementById("btn-add-item");
@@ -181,6 +185,77 @@ async function sincronizarDocumentoPerfil(documento, salvar) {
     console.error("Erro ao salvar documento do perfil:", error);
     alert("Não foi possível salvar o CPF/CNPJ no perfil. Tente novamente.");
   }
+}
+
+function limparTelefone(value) {
+  return String(value || "").replace(/\D/g, "").slice(0, 11);
+}
+
+function formatarTelefone(value) {
+  const digits = limparTelefone(value);
+  if (digits.length <= 10) {
+    return digits
+      .replace(/(\d{2})(\d)/, "($1) $2")
+      .replace(/(\d{4})(\d)/, "$1-$2");
+  }
+  return digits
+    .replace(/(\d{2})(\d)/, "($1) $2")
+    .replace(/(\d{5})(\d)/, "$1-$2");
+}
+
+async function sincronizarDadosPrestador(
+  nome,
+  telefone,
+  salvarNome,
+  salvarTelefone,
+) {
+  if (!currentUser) return false;
+
+  const nomeLimpo = String(nome || "").trim();
+  const telefoneLimpo = limparTelefone(telefone);
+
+  if (salvarNome && !nomeLimpo) {
+    alert("Informe seu nome ou empresa para salvar esse dado.");
+    if (prestadorNomeSalvarEl) prestadorNomeSalvarEl.checked = false;
+    return false;
+  }
+
+  if (salvarTelefone && ![10, 11].includes(telefoneLimpo.length)) {
+    alert("Informe um telefone/WhatsApp válido com DDD.");
+    if (prestadorFoneSalvarEl) prestadorFoneSalvarEl.checked = false;
+    return false;
+  }
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      nome_empresa: salvarNome ? nomeLimpo : null,
+      nome_empresa_salvo: salvarNome,
+      telefone: salvarTelefone ? telefoneLimpo : null,
+      telefone_salvo: salvarTelefone,
+    })
+    .eq("id", currentUser.id);
+
+  if (error) {
+    console.error("Erro ao salvar dados do perfil:", error);
+    alert("Não foi possível salvar os dados do perfil. Tente novamente.");
+    return false;
+  }
+
+  return true;
+}
+
+async function salvarDadosPrestadorSeSelecionado() {
+  if (!prestadorNomeSalvarEl?.checked && !prestadorFoneSalvarEl?.checked) {
+    return true;
+  }
+
+  return sincronizarDadosPrestador(
+    prestadorNomeInputEl?.value,
+    prestadorFoneInputEl?.value,
+    !!prestadorNomeSalvarEl?.checked,
+    !!prestadorFoneSalvarEl?.checked,
+  );
 }
 
 // --- Função de Download do PDF Preview ---
@@ -684,7 +759,7 @@ async function carregarUsuario() {
     let profileQuery = supabase
       .from("profiles")
       .select(
-        "is_pro, plan_status, plan_started_at, plan_expires_at, pdf_count, documento, documento_salvo",
+        "is_pro, plan_status, plan_started_at, plan_expires_at, pdf_count, documento, documento_salvo, nome_empresa, nome_empresa_salvo, telefone, telefone_salvo",
       )
       .eq("id", user.id)
       .single();
@@ -709,9 +784,15 @@ async function carregarUsuario() {
             pdf_count: 0,
             documento: null,
             documento_salvo: false,
+            nome_empresa: null,
+            nome_empresa_salvo: false,
+            telefone: null,
+            telefone_salvo: false,
           },
         ])
-        .select("is_pro, pdf_count, documento, documento_salvo")
+        .select(
+          "is_pro, pdf_count, documento, documento_salvo, nome_empresa, nome_empresa_salvo, telefone, telefone_salvo",
+        )
         .single();
 
       if (insertError && insertError.code === "42703") {
@@ -748,6 +829,26 @@ async function carregarUsuario() {
         prestadorDocumentoSalvarEl.checked = !!profile.documento_salvo;
       }
 
+      if (prestadorNomeInputEl) {
+        prestadorNomeInputEl.value = profile.nome_empresa_salvo
+          ? profile.nome_empresa || ""
+          : "";
+      }
+
+      if (prestadorFoneInputEl) {
+        prestadorFoneInputEl.value = profile.telefone_salvo
+          ? formatarTelefone(profile.telefone || "")
+          : "";
+      }
+
+      if (prestadorNomeSalvarEl) {
+        prestadorNomeSalvarEl.checked = !!profile.nome_empresa_salvo;
+      }
+
+      if (prestadorFoneSalvarEl) {
+        prestadorFoneSalvarEl.checked = !!profile.telefone_salvo;
+      }
+
       if (proBadgeEl) {
         if (isProUser) {
           proBadgeEl.classList.remove("hidden");
@@ -765,6 +866,10 @@ async function carregarUsuario() {
     }
     if (prestadorDocumentoInputEl) prestadorDocumentoInputEl.value = "";
     if (prestadorDocumentoSalvarEl) prestadorDocumentoSalvarEl.checked = false;
+    if (prestadorNomeInputEl) prestadorNomeInputEl.value = "";
+    if (prestadorFoneInputEl) prestadorFoneInputEl.value = "";
+    if (prestadorNomeSalvarEl) prestadorNomeSalvarEl.checked = false;
+    if (prestadorFoneSalvarEl) prestadorFoneSalvarEl.checked = false;
     atualizarAvisoVencimento(null);
   }
 }
@@ -803,6 +908,29 @@ if (prestadorDocumentoSalvarEl) {
   });
 }
 
+if (prestadorFoneInputEl) {
+  prestadorFoneInputEl.addEventListener("input", (event) => {
+    event.target.value = formatarTelefone(event.target.value);
+  });
+}
+
+async function atualizarDadosPrestadorSalvos() {
+  await sincronizarDadosPrestador(
+    prestadorNomeInputEl?.value,
+    prestadorFoneInputEl?.value,
+    !!prestadorNomeSalvarEl?.checked,
+    !!prestadorFoneSalvarEl?.checked,
+  );
+}
+
+if (prestadorNomeSalvarEl) {
+  prestadorNomeSalvarEl.addEventListener("change", atualizarDadosPrestadorSalvos);
+}
+
+if (prestadorFoneSalvarEl) {
+  prestadorFoneSalvarEl.addEventListener("change", atualizarDadosPrestadorSalvos);
+}
+
 // --- Função para Gerar PDF ---
 async function gerarPDF() {
   if (!currentUser) {
@@ -810,6 +938,8 @@ async function gerarPDF() {
     window.location.href = "/login.html";
     return;
   }
+
+  if (!(await salvarDadosPrestadorSeSelecionado())) return;
 
   if (!isProUser && userPdfCount >= 3) {
     if (modalProEl) {
