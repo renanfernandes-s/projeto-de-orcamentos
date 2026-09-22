@@ -6,6 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Use OrçaFácilApp | Gerador de Orçamentos Profissionais</title>
   <link rel="stylesheet" href="/src/style.css" />
+  <link rel="manifest" href="/site.webmanifest">
+  <!-- Favicons -->
+  <link rel="shortcut icon" type="image/x-icon" href="/icons/favicon.ico?v=3">
+  <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png?v=3">
+  <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png?v=3">
+  <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png?v=3">
 </head>
 
 <body class="bg-slate-100 font-sans text-slate-800 antialiased min-h-screen pb-12">
@@ -172,199 +178,200 @@
       </button>
     </div>
 
-  <!-- Modal de Upgrade PRO & Pagamento Asaas -->
-  <div id="modal-pro"
-    class="fixed inset-0 bg-indigo-950/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-    <div
-      class="bg-white rounded-2xl max-w-sm w-full p-6 text-center shadow-2xl border border-slate-100 animate-in fade-in zoom-in duration-200">
+    <!-- Modal de Upgrade PRO & Pagamento Asaas -->
+    <div id="modal-pro"
+      class="fixed inset-0 bg-indigo-950/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+      <div
+        class="bg-white rounded-2xl max-w-sm w-full p-6 text-center shadow-2xl border border-slate-100 animate-in fade-in zoom-in duration-200">
 
-      <!-- ETAPA 1: Oferta e Escolha do Método -->
-      <div id="modal-etapa-oferta">
-        <div
-          class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl mx-auto flex items-center justify-center text-2xl mb-4 font-black">
-          ⚡
-        </div>
-        <h3 class="text-lg font-black text-indigo-950 tracking-tight mb-2">
-          Você atingiu o limite gratuito!
-        </h3>
-        <p class="text-xs text-slate-600 leading-relaxed mb-4">
-          Parabéns por aproveitar o <span class="font-bold text-indigo-950">UseOrçaFácilApp</span>! Para continuar
-          fechando negócios e emitir <span class="font-bold text-emerald-600">orçamentos ilimitados</span>
-          com a sua marca, garanta acesso completo agora mesmo.
-        </p>
-
-        <div
-          class="bg-slate-50 rounded-xl p-3 text-left text-[11px] text-slate-700 space-y-2 mb-5 border border-slate-200/60">
-          <div class="flex items-center gap-2">
-            <span class="text-emerald-500 font-bold">✓</span> Orçamentos ilimitados sem restrições
+        <!-- ETAPA 1: Oferta e Escolha do Método -->
+        <div id="modal-etapa-oferta">
+          <div
+            class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl mx-auto flex items-center justify-center text-2xl mb-4 font-black">
+            ⚡
           </div>
-          <div class="flex items-center gap-2">
-            <span class="text-emerald-500 font-bold">✓</span> PDF profissional pronto para o WhatsApp
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="text-emerald-500 font-bold">✓</span> Suporte prioritário para novos recursos
-          </div>
-        </div>
+          <h3 class="text-lg font-black text-indigo-950 tracking-tight mb-2">
+            Você atingiu o limite gratuito!
+          </h3>
+          <p class="text-xs text-slate-600 leading-relaxed mb-4">
+            Parabéns por aproveitar o <span class="font-bold text-indigo-950">UseOrçaFácilApp</span>! Para continuar
+            fechando negócios e emitir <span class="font-bold text-emerald-600">orçamentos ilimitados</span>
+            com a sua marca, garanta acesso completo agora mesmo.
+          </p>
 
-        <!-- Opções de Pagamento: PIX ou Cartão -->
-        <div class="space-y-2.5">
-          <button id="btn-assinar-pro" type="button"
-            class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-xl text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/25 transition flex items-center justify-center gap-2">
-            <span>📱</span> Pagar R$ 14,90 via PIX
-          </button>
-
-          <button id="btn-gerar-cartao" type="button"
-            class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl text-xs uppercase tracking-wider shadow-lg shadow-indigo-600/25 transition flex items-center justify-center gap-2">
-            <span>💳</span> Pagar R$ 14,90 no Cartão
-          </button>
-
-          <button id="btn-fechar-modal" type="button"
-            class="w-full py-2 bg-transparent hover:bg-slate-100 text-slate-400 hover:text-slate-600 font-bold rounded-xl text-xs transition">
-            Agora não
-          </button>
-        </div>
-      </div>
-
-      <!-- ETAPA 2A: Pagamento Pix (Asaas) -->
-      <div id="modal-etapa-pix" class="hidden">
-        <div
-          class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-2xl mx-auto flex items-center justify-center text-xl mb-3 font-black">
-          📱
-        </div>
-        <h3 class="text-base font-black text-indigo-950 tracking-tight mb-1">
-          Pague com Pix para ativar
-        </h3>
-        <p class="text-[11px] text-slate-500 mb-4">
-          Escaneie o QR Code abaixo com o aplicativo do seu banco ou copie a chave.
-        </p>
-
-        <!-- Container onde a imagem real do QR Code será injetada dinamicamente via JS -->
-        <div class="bg-slate-100 p-4 rounded-xl border border-slate-200 flex flex-col items-center justify-center mb-4">
-          <div id="container-qrcode-pix"
-            class="w-36 h-36 bg-white p-2 rounded-lg shadow-inner flex items-center justify-center border border-slate-200 mb-2">
-            <!-- A imagem gerada pelo Asaas entra aqui automaticamente -->
-          </div>
-          <span class="text-xs font-black text-indigo-950">Valor: R$ 14,90</span>
-        </div>
-
-        <!-- Botão Copia e Cola -->
-        <div class="space-y-2 mb-4">
-          <input type="text" id="pix-copia-cola" readonly
-            class="w-full text-[10px] bg-slate-50 text-slate-600 p-2 rounded-lg border border-slate-200 outline-none text-center truncate select-all" />
-          <button id="btn-copiar-pix" type="button"
-            class="w-full py-2 bg-indigo-100 hover:bg-indigo-200 text-indigo-900 font-bold rounded-xl text-xs transition">
-            📋 Copiar Código Pix Copia e Cola
-          </button>
-        </div>
-
-        <!-- Status de Aguardando Pagamento -->
-        <div
-          class="bg-amber-50 border border-amber-200 rounded-xl p-2.5 text-[11px] text-amber-800 flex items-center justify-center gap-2 mb-4">
-          <span class="animate-spin text-sm">⏳</span>
-          <span>Aguardando confirmação do pagamento...</span>
-        </div>
-
-        <button type="button" class="btn-voltar-oferta text-xs text-slate-400 hover:text-slate-600 font-medium">
-          ← Voltar e escolher outra forma
-        </button>
-      </div>
-
-      <!-- ETAPA 2B: Pagamento Cartão de Crédito -->
-      <div id="modal-etapa-cartao" class="hidden">
-        <div
-          class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-2xl mx-auto flex items-center justify-center text-xl mb-3 font-black">
-          💳
-        </div>
-        <h3 class="text-base font-black text-indigo-950 tracking-tight mb-1">
-          Pagamento via Cartão
-        </h3>
-        <p class="text-[11px] text-slate-500 mb-4">
-          Informe seu CPF para gerar o link seguro de checkout no Asaas:
-        </p>
-
-        <div class="space-y-3 mb-4 text-left">
-          <div>
-            <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">CPF / CNPJ do
-              Titular</label>
-            <input type="text" id="cartao-cpf" placeholder="000.000.000-00"
-              class="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none" />
+          <div
+            class="bg-slate-50 rounded-xl p-3 text-left text-[11px] text-slate-700 space-y-2 mb-5 border border-slate-200/60">
+            <div class="flex items-center gap-2">
+              <span class="text-emerald-500 font-bold">✓</span> Orçamentos ilimitados sem restrições
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-emerald-500 font-bold">✓</span> PDF profissional pronto para o WhatsApp
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-emerald-500 font-bold">✓</span> Suporte prioritário para novos recursos
+            </div>
           </div>
 
-          <button id="btn-confirmar-cartao" type="button"
-            class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition shadow-md">
-            Ir para Pagamento Seguro 🔒
+          <!-- Opções de Pagamento: PIX ou Cartão -->
+          <div class="space-y-2.5">
+            <button id="btn-assinar-pro" type="button"
+              class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-xl text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/25 transition flex items-center justify-center gap-2">
+              <span>📱</span> Pagar R$ 14,90 via PIX
+            </button>
+
+            <button id="btn-gerar-cartao" type="button"
+              class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl text-xs uppercase tracking-wider shadow-lg shadow-indigo-600/25 transition flex items-center justify-center gap-2">
+              <span>💳</span> Pagar R$ 14,90 no Cartão
+            </button>
+
+            <button id="btn-fechar-modal" type="button"
+              class="w-full py-2 bg-transparent hover:bg-slate-100 text-slate-400 hover:text-slate-600 font-bold rounded-xl text-xs transition">
+              Agora não
+            </button>
+          </div>
+        </div>
+
+        <!-- ETAPA 2A: Pagamento Pix (Asaas) -->
+        <div id="modal-etapa-pix" class="hidden">
+          <div
+            class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-2xl mx-auto flex items-center justify-center text-xl mb-3 font-black">
+            📱
+          </div>
+          <h3 class="text-base font-black text-indigo-950 tracking-tight mb-1">
+            Pague com Pix para ativar
+          </h3>
+          <p class="text-[11px] text-slate-500 mb-4">
+            Escaneie o QR Code abaixo com o aplicativo do seu banco ou copie a chave.
+          </p>
+
+          <!-- Container onde a imagem real do QR Code será injetada dinamicamente via JS -->
+          <div
+            class="bg-slate-100 p-4 rounded-xl border border-slate-200 flex flex-col items-center justify-center mb-4">
+            <div id="container-qrcode-pix"
+              class="w-36 h-36 bg-white p-2 rounded-lg shadow-inner flex items-center justify-center border border-slate-200 mb-2">
+              <!-- A imagem gerada pelo Asaas entra aqui automaticamente -->
+            </div>
+            <span class="text-xs font-black text-indigo-950">Valor: R$ 14,90</span>
+          </div>
+
+          <!-- Botão Copia e Cola -->
+          <div class="space-y-2 mb-4">
+            <input type="text" id="pix-copia-cola" readonly
+              class="w-full text-[10px] bg-slate-50 text-slate-600 p-2 rounded-lg border border-slate-200 outline-none text-center truncate select-all" />
+            <button id="btn-copiar-pix" type="button"
+              class="w-full py-2 bg-indigo-100 hover:bg-indigo-200 text-indigo-900 font-bold rounded-xl text-xs transition">
+              📋 Copiar Código Pix Copia e Cola
+            </button>
+          </div>
+
+          <!-- Status de Aguardando Pagamento -->
+          <div
+            class="bg-amber-50 border border-amber-200 rounded-xl p-2.5 text-[11px] text-amber-800 flex items-center justify-center gap-2 mb-4">
+            <span class="animate-spin text-sm">⏳</span>
+            <span>Aguardando confirmação do pagamento...</span>
+          </div>
+
+          <button type="button" class="btn-voltar-oferta text-xs text-slate-400 hover:text-slate-600 font-medium">
+            ← Voltar e escolher outra forma
           </button>
         </div>
 
-        <!-- Status de Aguardando Pagamento -->
-        <div id="status-aguardando-cartao"
-          class="hidden bg-amber-50 border border-amber-200 rounded-xl p-2.5 text-[11px] text-amber-800 items-center justify-center gap-2 mb-4">
-          <span class="animate-spin text-sm">⏳</span>
-          <span>Aguardando aprovação da operadora...</span>
+        <!-- ETAPA 2B: Pagamento Cartão de Crédito -->
+        <div id="modal-etapa-cartao" class="hidden">
+          <div
+            class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-2xl mx-auto flex items-center justify-center text-xl mb-3 font-black">
+            💳
+          </div>
+          <h3 class="text-base font-black text-indigo-950 tracking-tight mb-1">
+            Pagamento via Cartão
+          </h3>
+          <p class="text-[11px] text-slate-500 mb-4">
+            Informe seu CPF para gerar o link seguro de checkout no Asaas:
+          </p>
+
+          <div class="space-y-3 mb-4 text-left">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">CPF / CNPJ do
+                Titular</label>
+              <input type="text" id="cartao-cpf" placeholder="000.000.000-00"
+                class="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none" />
+            </div>
+
+            <button id="btn-confirmar-cartao" type="button"
+              class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition shadow-md">
+              Ir para Pagamento Seguro 🔒
+            </button>
+          </div>
+
+          <!-- Status de Aguardando Pagamento -->
+          <div id="status-aguardando-cartao"
+            class="hidden bg-amber-50 border border-amber-200 rounded-xl p-2.5 text-[11px] text-amber-800 items-center justify-center gap-2 mb-4">
+            <span class="animate-spin text-sm">⏳</span>
+            <span>Aguardando aprovação da operadora...</span>
+          </div>
+
+          <button type="button" class="btn-voltar-oferta text-xs text-slate-400 hover:text-slate-600 font-medium">
+            ← Voltar e escolher outra forma
+          </button>
         </div>
 
-        <button type="button" class="btn-voltar-oferta text-xs text-slate-400 hover:text-slate-600 font-medium">
-          ← Voltar e escolher outra forma
-        </button>
-      </div>
-
-      <!-- ETAPA 3: Sucesso / Parabéns -->
-      <div id="modal-etapa-sucesso" class="hidden">
-        <div
-          class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full mx-auto flex items-center justify-center text-3xl mb-4 font-black animate-bounce">
-          ✓
+        <!-- ETAPA 3: Sucesso / Parabéns -->
+        <div id="modal-etapa-sucesso" class="hidden">
+          <div
+            class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full mx-auto flex items-center justify-center text-3xl mb-4 font-black animate-bounce">
+            ✓
+          </div>
+          <h3 class="text-lg font-black text-indigo-950 tracking-tight mb-2">
+            Assinatura Ativada com Sucesso! 🎉
+          </h3>
+          <p class="text-xs text-slate-600 leading-relaxed mb-6">
+            Parabéns! Sua conta agora é <span class="font-bold text-emerald-600">PRO</span>. Você já pode emitir quantos
+            orçamentos precisar de forma totalmente ilimitada.
+          </p>
+          <button id="btn-concluir-pro" type="button"
+            class="w-full py-3 bg-indigo-950 hover:bg-indigo-900 text-white font-black rounded-xl text-xs uppercase tracking-wider shadow-lg transition">
+            Começar a Usar Agora 🚀
+          </button>
         </div>
-        <h3 class="text-lg font-black text-indigo-950 tracking-tight mb-2">
-          Assinatura Ativada com Sucesso! 🎉
-        </h3>
-        <p class="text-xs text-slate-600 leading-relaxed mb-6">
-          Parabéns! Sua conta agora é <span class="font-bold text-emerald-600">PRO</span>. Você já pode emitir quantos
-          orçamentos precisar de forma totalmente ilimitada.
-        </p>
-        <button id="btn-concluir-pro" type="button"
-          class="w-full py-3 bg-indigo-950 hover:bg-indigo-900 text-white font-black rounded-xl text-xs uppercase tracking-wider shadow-lg transition">
-          Começar a Usar Agora 🚀
-        </button>
-      </div>
 
-    </div>
-  </div>
-
-  <!-- Modal de Pré-visualização do PDF -->
-  <div id="modal-preview" class="fixed inset-0 z-50 hidden items-center justify-center bg-indigo-950/80 p-4">
-    <div class="flex h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl">
-      <div class="flex items-center justify-between border-b border-slate-200 p-4">
-        <h2 class="text-lg font-bold text-slate-800">Pré-visualização do orçamento</h2>
-
-        <button id="btn-fechar-preview" type="button" class="text-2xl font-bold text-slate-400 hover:text-red-500"
-          title="Fechar pré-visualização">
-          &times;
-        </button>
-      </div>
-
-      <!-- Div de Pré-visualização com centralização correta -->
-      <div class="flex-1 overflow-y-auto bg-slate-200/50 p-3 sm:p-6 flex justify-center items-start">
-        <div id="container-pdf-preview"
-          class="w-full max-w-2xl bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-          <!-- O HTML do PDF renderizado entrará aqui via JS -->
-        </div>
-      </div>
-
-      <div class="flex gap-2 border-t border-slate-200 p-4">
-        <button id="btn-baixar-preview" type="button"
-          class="flex-1 rounded-lg bg-indigo-950 px-4 py-3 text-sm font-bold text-white hover:bg-indigo-900">
-          Baixar PDF
-        </button>
-
-        <button id="btn-cancelar-preview" type="button"
-          class="rounded-lg border border-slate-300 px-4 py-3 text-sm font-bold text-slate-600 hover:bg-slate-100">
-          Cancelar
-        </button>
       </div>
     </div>
-  </div>
 
-  <script type="module" src="/src/main.js"></script>
+    <!-- Modal de Pré-visualização do PDF -->
+    <div id="modal-preview" class="fixed inset-0 z-50 hidden items-center justify-center bg-indigo-950/80 p-4">
+      <div class="flex h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl">
+        <div class="flex items-center justify-between border-b border-slate-200 p-4">
+          <h2 class="text-lg font-bold text-slate-800">Pré-visualização do orçamento</h2>
+
+          <button id="btn-fechar-preview" type="button" class="text-2xl font-bold text-slate-400 hover:text-red-500"
+            title="Fechar pré-visualização">
+            &times;
+          </button>
+        </div>
+
+        <!-- Div de Pré-visualização com centralização correta -->
+        <div class="flex-1 overflow-y-auto bg-slate-200/50 p-3 sm:p-6 flex justify-center items-start">
+          <div id="container-pdf-preview"
+            class="w-full max-w-2xl bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <!-- O HTML do PDF renderizado entrará aqui via JS -->
+          </div>
+        </div>
+
+        <div class="flex gap-2 border-t border-slate-200 p-4">
+          <button id="btn-baixar-preview" type="button"
+            class="flex-1 rounded-lg bg-indigo-950 px-4 py-3 text-sm font-bold text-white hover:bg-indigo-900">
+            Baixar PDF
+          </button>
+
+          <button id="btn-cancelar-preview" type="button"
+            class="rounded-lg border border-slate-300 px-4 py-3 text-sm font-bold text-slate-600 hover:bg-slate-100">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
 </body>
 
 </html>
