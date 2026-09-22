@@ -13,6 +13,35 @@ let intervalProId = null; // Guard do ID do polling
 
 let itens = [];
 
+function limparDadosDoFormulario() {
+  const idsCampos = [
+    "prestador-nome",
+    "prestador-fone",
+    "prestador-documento",
+    "cliente-nome",
+    "cliente-fone",
+    "observacoes",
+  ];
+
+  idsCampos.forEach((id) => {
+    const campo = document.getElementById(id);
+    if (campo) campo.value = "";
+  });
+
+  [
+    prestadorDocumentoSalvarEl,
+    prestadorNomeSalvarEl,
+    prestadorFoneSalvarEl,
+  ].forEach((checkbox) => {
+    if (checkbox) checkbox.checked = false;
+  });
+
+  itens = [];
+  renderizarTabela();
+  pdfWorkerAtual = null;
+  fecharPreview();
+}
+
 // --- Seleção de Elementos do DOM ---
 const observacoesEl = document.getElementById("observacoes");
 const userAreaEl = document.getElementById("user-area");
@@ -859,17 +888,12 @@ async function carregarUsuario() {
       atualizarAvisoVencimento(profile.plan_expires_at);
     }
   } else {
+    limparDadosDoFormulario();
     if (btnGoLoginEl) btnGoLoginEl.classList.remove("hidden");
     if (userInfoCardEl) {
       userInfoCardEl.classList.add("hidden");
       userInfoCardEl.classList.remove("flex");
     }
-    if (prestadorDocumentoInputEl) prestadorDocumentoInputEl.value = "";
-    if (prestadorDocumentoSalvarEl) prestadorDocumentoSalvarEl.checked = false;
-    if (prestadorNomeInputEl) prestadorNomeInputEl.value = "";
-    if (prestadorFoneInputEl) prestadorFoneInputEl.value = "";
-    if (prestadorNomeSalvarEl) prestadorNomeSalvarEl.checked = false;
-    if (prestadorFoneSalvarEl) prestadorFoneSalvarEl.checked = false;
     atualizarAvisoVencimento(null);
   }
 }
@@ -878,6 +902,7 @@ async function carregarUsuario() {
 if (btnLogoutEl) {
   btnLogoutEl.addEventListener("click", async () => {
     pararVerificacaoStatusPro();
+    limparDadosDoFormulario();
     await supabase.auth.signOut();
     window.location.reload();
   });
@@ -910,6 +935,14 @@ if (prestadorDocumentoSalvarEl) {
 
 if (prestadorFoneInputEl) {
   prestadorFoneInputEl.addEventListener("input", (event) => {
+    event.target.value = formatarTelefone(event.target.value);
+  });
+}
+
+const clienteFoneInputEl = document.getElementById("cliente-fone");
+
+if (clienteFoneInputEl) {
+  clienteFoneInputEl.addEventListener("input", (event) => {
     event.target.value = formatarTelefone(event.target.value);
   });
 }
