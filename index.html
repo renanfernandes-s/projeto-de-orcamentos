@@ -188,6 +188,46 @@
       </button>
     </div>
 
+    <!-- Modal de Redefinição de Senha -->
+    <div id="modal-reset-password"
+      class="fixed inset-0 bg-indigo-950/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+      <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-100">
+        <h2 class="text-lg font-black text-indigo-950 mb-2">Criar nova senha</h2>
+        <p class="text-xs text-slate-500 leading-relaxed mb-4">
+          Escolha uma senha com pelo menos 10 caracteres para proteger sua conta.
+        </p>
+
+        <form id="reset-password-form" class="space-y-3">
+          <div>
+            <label for="reset-password"
+              class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+              Nova senha
+            </label>
+            <input id="reset-password" type="password" required minlength="10" autocomplete="new-password"
+              class="w-full text-sm p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+              placeholder="Mínimo de 10 caracteres">
+          </div>
+
+          <div>
+            <label for="reset-password-confirm"
+              class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+              Confirmar nova senha
+            </label>
+            <input id="reset-password-confirm" type="password" required minlength="10" autocomplete="new-password"
+              class="w-full text-sm p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+              placeholder="Digite novamente a senha">
+          </div>
+
+          <p id="reset-password-error" class="hidden text-xs text-red-600" role="alert"></p>
+
+          <button id="btn-reset-password" type="submit"
+            class="w-full py-3 bg-indigo-950 hover:bg-indigo-900 text-white font-bold rounded-xl shadow-md text-sm transition">
+            Atualizar senha
+          </button>
+        </form>
+      </div>
+    </div>
+
     <!-- Modal de Upgrade PRO & Pagamento Asaas -->
     <div id="modal-pro"
       class="fixed inset-0 bg-indigo-950/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4">

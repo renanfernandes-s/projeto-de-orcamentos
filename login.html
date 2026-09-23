@@ -7,6 +7,7 @@
     <title>Entrar ou Cadastrar | Use OrçaFácilAPP</title>
     <link rel="stylesheet" href="/src/style.css" />
     <link rel="manifest" href="/site.webmanifest">
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <!-- Favicons -->
     <link rel="shortcut icon" type="image/x-icon" href="/icons/favicon.ico?v=3">
     <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png?v=3">
@@ -38,10 +39,11 @@
 
             <div>
                 <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Senha</label>
-                <input type="password" id="auth-password" required minlength="6"
+                <input type="password" id="auth-password" required minlength="10"
                     class="w-full text-sm p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
                     placeholder="••••••••">
             </div>
+            <div class="cf-turnstile" data-sitekey="0x4AAAAAAFApg6-zgm8b7Ccf"></div>
 
             <!-- Botões de Ação -->
             <div class="space-y-2 pt-2">
@@ -53,6 +55,11 @@
                 <button type="button" id="btn-signup"
                     class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-sm transition border border-slate-200">
                     Criar Nova Conta
+                </button>
+
+                <button type="button" id="btn-recovery"
+                    class="w-full py-2 text-xs font-semibold text-indigo-700 hover:text-indigo-900 transition">
+                    Esqueci minha senha
                 </button>
             </div>
         </form>

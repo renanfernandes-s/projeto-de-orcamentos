@@ -7,32 +7,20 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 
 // --- Função: Enviar e-mail de recuperação ---
-export async function solicitarRecuperacaoSenha(email) {
+export async function solicitarRecuperacaoSenha(email, captchaToken) {
     if (!email) {
-        alert("Por favor, digite seu e-mail.");
-        return;
+        return { error: new Error("Informe seu e-mail.") };
     }
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    return supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/#reset-password`,
+        captchaToken,
     });
-
-    if (error) {
-        alert(`Erro ao enviar e-mail: ${error.message}`);
-    } else {
-        alert("E-mail de redefinição enviado! Verifique sua caixa de entrada.");
-    }
 }
 
 // --- Função: Atualizar para a nova senha ---
 export async function atualizarSenha(novaSenha) {
-    const { error } = await supabase.auth.updateUser({
+    return supabase.auth.updateUser({
         password: novaSenha
     });
-
-    if (error) {
-        alert(`Erro ao atualizar senha: ${error.message}`);
-    } else {
-        alert("Senha atualizada com sucesso! Você já pode navegar normalmente.");
-    }
 }

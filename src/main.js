@@ -10,6 +10,7 @@ let planExpiresAt = null;
 let pdfWorkerAtual = null;
 let nomeArquivoAtual = "orcamento.pdf";
 let intervalProId = null; // Guard do ID do polling
+const MIN_PASSWORD_LENGTH = 10;
 
 let itens = [];
 
@@ -73,6 +74,12 @@ const containerPdfPreviewEl = document.getElementById("container-pdf-preview");
 const btnFecharPreviewEl = document.getElementById("btn-fechar-preview");
 const btnBaixarPreviewEl = document.getElementById("btn-baixar-preview");
 const btnCancelarPreviewEl = document.getElementById("btn-cancelar-preview");
+const modalResetPasswordEl = document.getElementById("modal-reset-password");
+const resetPasswordFormEl = document.getElementById("reset-password-form");
+const resetPasswordInputEl = document.getElementById("reset-password");
+const resetPasswordConfirmEl = document.getElementById("reset-password-confirm");
+const resetPasswordErrorEl = document.getElementById("reset-password-error");
+const btnResetPasswordEl = document.getElementById("btn-reset-password");
 
 // --- Seleção de Elementos do Modal PRO e Pagamento ---
 const modalProEl = document.getElementById("modal-pro");
@@ -1232,12 +1239,61 @@ Anexei o PDF com todas as especificações e prazos para sua avaliação. Fico �
 btnGerarPdfEl.addEventListener("click", gerarPDF);
 btnEnviarWhatsEl.addEventListener("click", enviarWhatsApp);
 
+function mostrarErroRedefinicao(mensagem) {
+  resetPasswordErrorEl.textContent = mensagem;
+  resetPasswordErrorEl.classList.remove("hidden");
+}
+
+function abrirModalRedefinicao() {
+  modalResetPasswordEl.classList.remove("hidden");
+  modalResetPasswordEl.classList.add("flex");
+  resetPasswordInputEl.focus();
+}
+
+resetPasswordFormEl?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  resetPasswordErrorEl.classList.add("hidden");
+
+  const novaSenha = resetPasswordInputEl.value;
+  const confirmacao = resetPasswordConfirmEl.value;
+
+  if (novaSenha.length < MIN_PASSWORD_LENGTH) {
+    mostrarErroRedefinicao(`A senha deve ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres.`);
+    resetPasswordInputEl.focus();
+    return;
+  }
+
+  if (novaSenha !== confirmacao) {
+    mostrarErroRedefinicao("As senhas não conferem.");
+    resetPasswordConfirmEl.focus();
+    return;
+  }
+
+  btnResetPasswordEl.disabled = true;
+  btnResetPasswordEl.textContent = "Atualizando...";
+
+  try {
+    const { error } = await atualizarSenha(novaSenha);
+    if (error) {
+      mostrarErroRedefinicao("Não foi possível atualizar a senha. Tente novamente.");
+      return;
+    }
+
+    alert("Senha atualizada com sucesso!");
+    modalResetPasswordEl.classList.add("hidden");
+    modalResetPasswordEl.classList.remove("flex");
+    resetPasswordFormEl.reset();
+  } catch {
+    mostrarErroRedefinicao("Não foi possível atualizar a senha. Tente novamente mais tarde.");
+  } finally {
+    btnResetPasswordEl.disabled = false;
+    btnResetPasswordEl.textContent = "Atualizar senha";
+  }
+});
+
 supabase.auth.onAuthStateChange(async (event) => {
   if (event === "PASSWORD_RECOVERY") {
-    const novaSenha = prompt("Digite sua nova senha:");
-    if (novaSenha) {
-      await atualizarSenha(novaSenha);
-    }
+    abrirModalRedefinicao();
   }
 });
 
