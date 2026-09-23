@@ -13,8 +13,17 @@ const btnLogin = document.getElementById('btn-login');
 const btnRecovery = document.getElementById('btn-recovery');
 const tabLogin = document.getElementById('tab-login');
 const tabSignup = document.getElementById('tab-signup');
+const authFeedback = document.getElementById('auth-feedback');
+const authFeedbackTitle = document.getElementById('auth-feedback-title');
+const authFeedbackMessage = document.getElementById('auth-feedback-message');
+const authFeedbackEmail = document.getElementById('auth-feedback-email');
+const btnResendEmail = document.getElementById('btn-resend-email');
+const btnBackAuth = document.getElementById('btn-back-auth');
 
 let authMode = 'login';
+let feedbackMode = null;
+let feedbackEmail = '';
+let resendTimer = null;
 
 // Redireciona caso já esteja logado
 async function verificarSessao() {
@@ -34,6 +43,51 @@ function resetarTurnstile() {
     if (window.turnstile) {
         window.turnstile.reset();
     }
+}
+
+function mascararEmail(email) {
+    const [usuario, dominio] = email.split('@');
+    if (!usuario || !dominio) return email;
+    const prefixo = usuario.slice(0, Math.min(2, usuario.length));
+    return `${prefixo}${'*'.repeat(Math.max(2, usuario.length - prefixo.length))}@${dominio}`;
+}
+
+function mostrarFeedbackEmail(modo, email) {
+    feedbackMode = modo;
+    feedbackEmail = email;
+    authFeedbackTitle.textContent = modo === 'signup'
+        ? 'Confirme seu cadastro por e-mail'
+        : 'Confira seu e-mail para redefinir a senha';
+    authFeedbackMessage.textContent = modo === 'signup'
+        ? 'Enviamos um link de confirmação. Verifique também as pastas Spam, Lixo eletrônico e Promoções.'
+        : 'Enviamos um link de recuperação. Verifique também as pastas Spam, Lixo eletrônico e Promoções.';
+    authFeedbackEmail.textContent = mascararEmail(email);
+    authFeedback.classList.remove('hidden');
+}
+
+function ocultarFeedbackEmail() {
+    authFeedback.classList.add('hidden');
+    feedbackMode = null;
+    if (resendTimer) clearInterval(resendTimer);
+    btnResendEmail.disabled = false;
+    btnResendEmail.textContent = 'Reenviar e-mail';
+}
+
+function iniciarContagemReenvio() {
+    let segundos = 60;
+    btnResendEmail.disabled = true;
+    btnResendEmail.textContent = `Reenviar em ${segundos}s`;
+    resendTimer = setInterval(() => {
+        segundos -= 1;
+        if (segundos <= 0) {
+            clearInterval(resendTimer);
+            resendTimer = null;
+            btnResendEmail.disabled = false;
+            btnResendEmail.textContent = 'Reenviar e-mail';
+            return;
+        }
+        btnResendEmail.textContent = `Reenviar em ${segundos}s`;
+    }, 1000);
 }
 
 function alternarModo(modo) {
@@ -108,10 +162,10 @@ form.addEventListener('submit', async (e) => {
         }
 
         if (cadastroAtivo) {
-            alert("Conta criada com sucesso! Verifique seu e-mail para confirmar o cadastro.");
-            alternarModo('login');
+            mostrarFeedbackEmail('signup', email);
             passwordInput.value = '';
             passwordConfirmationInput.value = '';
+            iniciarContagemReenvio();
             return;
         }
 
@@ -147,11 +201,12 @@ btnRecovery.addEventListener('click', async () => {
     try {
         const { error } = await solicitarRecuperacaoSenha(email, turnstileToken);
         if (error) {
-            alert("Não foi possível solicitar a recuperação. Verifique o e-mail e tente novamente mais tarde.");
+            alert("Não foi possível solicitar a recuperação. Tente novamente mais tarde.");
             return;
         }
 
-        alert("Se existir uma conta para este e-mail, enviaremos um link de recuperação.");
+        mostrarFeedbackEmail('recovery', email);
+        iniciarContagemReenvio();
     } catch {
         alert("Não foi possível solicitar a recuperação. Tente novamente mais tarde.");
     } finally {
@@ -160,5 +215,43 @@ btnRecovery.addEventListener('click', async () => {
         btnRecovery.textContent = "Esqueci minha senha";
     }
 });
+
+btnResendEmail.addEventListener('click', async () => {
+    const turnstileToken = obterTurnstileToken();
+    if (!turnstileToken) {
+        alert('Confirme o desafio de segurança antes de reenviar o e-mail.');
+        return;
+    }
+
+    btnResendEmail.disabled = true;
+    btnResendEmail.textContent = 'Enviando...';
+
+    try {
+        const response = feedbackMode === 'signup'
+            ? await supabase.auth.resend({
+                type: 'signup',
+                email: feedbackEmail,
+                options: { captchaToken: turnstileToken },
+            })
+            : await solicitarRecuperacaoSenha(feedbackEmail, turnstileToken);
+
+        if (response.error) {
+            alert('Não foi possível reenviar agora. Aguarde um pouco e tente novamente.');
+            btnResendEmail.disabled = false;
+            btnResendEmail.textContent = 'Reenviar e-mail';
+            return;
+        }
+
+        iniciarContagemReenvio();
+    } catch {
+        alert('Não foi possível reenviar agora. Tente novamente mais tarde.');
+        btnResendEmail.disabled = false;
+        btnResendEmail.textContent = 'Reenviar e-mail';
+    } finally {
+        resetarTurnstile();
+    }
+});
+
+btnBackAuth.addEventListener('click', ocultarFeedbackEmail);
 
 verificarSessao();
