@@ -28,6 +28,17 @@
             <p class="text-xs text-slate-500 mt-1">Acesse sua conta para criar e gerenciar orçamentos</p>
         </div>
 
+        <div class="grid grid-cols-2 gap-1 rounded-lg bg-slate-100 p-1" role="tablist" aria-label="Acesso à conta">
+            <button type="button" id="tab-login" role="tab" aria-selected="true"
+                class="rounded-md bg-white px-3 py-2 text-xs font-bold text-indigo-950 shadow-sm transition">
+                Entrar
+            </button>
+            <button type="button" id="tab-signup" role="tab" aria-selected="false"
+                class="rounded-md px-3 py-2 text-xs font-bold text-slate-500 transition">
+                Criar conta
+            </button>
+        </div>
+
         <!-- Formulário -->
         <form id="auth-form" class="space-y-4">
             <div>
@@ -38,10 +49,18 @@
             </div>
 
             <div>
-                <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Senha</label>
+                <label id="password-label"
+                    class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Senha</label>
                 <input type="password" id="auth-password" required minlength="10"
                     class="w-full text-sm p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
                     placeholder="••••••••">
+            </div>
+            <div id="password-confirmation-group" class="hidden">
+                <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Confirmar
+                    senha</label>
+                <input type="password" id="auth-password-confirmation" minlength="10" autocomplete="new-password"
+                    class="w-full text-sm p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                    placeholder="Digite a senha novamente">
             </div>
             <div class="cf-turnstile" data-sitekey="0x4AAAAAAFApg6-zgm8b7Ccf"></div>
 
@@ -50,11 +69,6 @@
                 <button type="submit" id="btn-login"
                     class="w-full py-3 bg-indigo-950 hover:bg-indigo-900 text-white font-bold rounded-xl shadow-md text-sm transition">
                     Entrar
-                </button>
-
-                <button type="button" id="btn-signup"
-                    class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-sm transition border border-slate-200">
-                    Criar Nova Conta
                 </button>
 
                 <button type="button" id="btn-recovery"
