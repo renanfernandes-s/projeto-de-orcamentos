@@ -1245,9 +1245,32 @@ function mostrarErroRedefinicao(mensagem) {
 }
 
 function abrirModalRedefinicao() {
+  if (!modalResetPasswordEl || !resetPasswordInputEl) return;
   modalResetPasswordEl.classList.remove("hidden");
   modalResetPasswordEl.classList.add("flex");
   resetPasswordInputEl.focus();
+}
+
+function limparParametrosRecuperacao() {
+  const url = new URL(window.location.href);
+  url.hash = "";
+  url.searchParams.delete("code");
+  url.searchParams.delete("type");
+  window.history.replaceState({}, document.title, url.pathname + url.search);
+}
+
+async function verificarRecuperacaoNaUrl() {
+  const hash = window.location.hash.replace(/^#/, "");
+  const hashParams = new URLSearchParams(hash);
+  const recoverySolicitada =
+    hashParams.get("type") === "recovery" ||
+    hash === "reset-password" ||
+    hash.includes("type=recovery");
+
+  if (!recoverySolicitada) return;
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) abrirModalRedefinicao();
 }
 
 resetPasswordFormEl?.addEventListener("submit", async (event) => {
@@ -1283,6 +1306,7 @@ resetPasswordFormEl?.addEventListener("submit", async (event) => {
     modalResetPasswordEl.classList.add("hidden");
     modalResetPasswordEl.classList.remove("flex");
     resetPasswordFormEl.reset();
+    limparParametrosRecuperacao();
   } catch {
     mostrarErroRedefinicao("Não foi possível atualizar a senha. Tente novamente mais tarde.");
   } finally {
@@ -1296,6 +1320,8 @@ supabase.auth.onAuthStateChange(async (event) => {
     abrirModalRedefinicao();
   }
 });
+
+verificarRecuperacaoNaUrl();
 
 // --- Inicialização da Aplicação ---
 document.addEventListener("DOMContentLoaded", () => {
