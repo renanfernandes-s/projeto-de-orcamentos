@@ -1257,12 +1257,16 @@ function limparParametrosRecuperacao() {
   url.searchParams.delete("code");
   url.searchParams.delete("type");
   window.history.replaceState({}, document.title, url.pathname + url.search);
+  sessionStorage.removeItem("orcafacil-password-recovery");
 }
 
 async function verificarRecuperacaoNaUrl() {
+  const url = new URL(window.location.href);
   const hash = window.location.hash.replace(/^#/, "");
   const hashParams = new URLSearchParams(hash);
   const recoverySolicitada =
+    sessionStorage.getItem("orcafacil-password-recovery") === "pending" ||
+    url.searchParams.get("type") === "recovery" ||
     hashParams.get("type") === "recovery" ||
     hash === "reset-password" ||
     hash.includes("type=recovery");

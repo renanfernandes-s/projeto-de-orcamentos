@@ -12,8 +12,10 @@ export async function solicitarRecuperacaoSenha(email, captchaToken) {
         return { error: new Error("Informe seu e-mail.") };
     }
 
+    sessionStorage.setItem("orcafacil-password-recovery", "pending");
+
     return supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/#reset-password`,
+        redirectTo: `${window.location.origin}/`,
         captchaToken,
     });
 }
