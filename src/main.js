@@ -10,6 +10,8 @@ let planExpiresAt = null;
 let pdfWorkerAtual = null;
 let nomeArquivoAtual = "orcamento.pdf";
 let intervalProId = null; // Guard do ID do polling
+let layoutNativoPdfAtual = null;
+let containerPdfAtual = null;
 const MIN_PASSWORD_LENGTH = 10;
 
 let itens = [];
@@ -332,7 +334,18 @@ async function baixarPreview() {
       userPdfCount = consumoData.pdfCount ?? userPdfCount;
     }
 
+    // As coordenadas precisam ser medidas com o preview visível. Os elementos
+    // ficam invisíveis apenas durante a captura, preservando o espaço no DOM.
+    layoutNativoPdfAtual = capturarLayoutNativoPdf(containerPdfAtual);
+    prepararElementosParaCapturaNativa(layoutNativoPdfAtual, true);
+
+    // html2pdf mantém o layout HTML, mas entrega a instância jsPDF para os
+    // quatro elementos críticos serem desenhados com coordenadas determinísticas.
+    const pdf = await pdfWorkerAtual.toPdf().get("pdf");
+    desenharPdfNativo(pdf, layoutNativoPdfAtual, itens.reduce((acc, item) => acc + item.qtd * item.preco, 0));
     await pdfWorkerAtual.save();
+    prepararElementosParaCapturaNativa(layoutNativoPdfAtual, false);
+    layoutNativoPdfAtual = null;
 
     btnEnviarWhatsEl?.classList.remove("hidden");
     btnEnviarWhatsEl?.classList.add("flex");
@@ -343,6 +356,10 @@ async function baixarPreview() {
     console.error("Erro ao baixar PDF:", err);
     alert("Ocorreu um erro ao baixar o PDF.");
   } finally {
+    if (layoutNativoPdfAtual) {
+      prepararElementosParaCapturaNativa(layoutNativoPdfAtual, false);
+      layoutNativoPdfAtual = null;
+    }
     btnBaixarPreviewEl.disabled = false;
     btnBaixarPreviewEl.textContent = "Baixar PDF";
   }
@@ -561,6 +578,149 @@ function renderizarTabela() {
   });
 
   calcularTotais();
+}
+
+function capturarLayoutNativoPdf(container) {
+  const containerRect = container.getBoundingClientRect();
+  const elementos = {
+    badgeProposta: container.querySelector('[data-native-pdf="proposal-badge"]'),
+    logo: container.querySelector('[data-native-pdf="logo"]'),
+    total: container.querySelector('[data-native-pdf="total"]'),
+    cabecalhoTabela: [...container.querySelectorAll('[data-native-pdf="table-header"]')],
+  };
+
+  const capturarRetangulo = (elemento) => {
+    if (!elemento) return null;
+    const rect = elemento.getBoundingClientRect();
+    return {
+      left: rect.left - containerRect.left,
+      top: rect.top - containerRect.top,
+      width: rect.width,
+      height: rect.height,
+    };
+  };
+
+  return {
+    containerWidth: containerRect.width,
+    badgeProposta: capturarRetangulo(elementos.badgeProposta),
+    logo: capturarRetangulo(elementos.logo),
+    total: capturarRetangulo(elementos.total),
+    cabecalhoTabela: elementos.cabecalhoTabela.map(capturarRetangulo),
+    elementos,
+  };
+}
+
+function prepararElementosParaCapturaNativa(layout, ocultar) {
+  const elementos = [
+    layout.elementos.badgeProposta,
+    layout.elementos.logo,
+    layout.elementos.total,
+    ...layout.elementos.cabecalhoTabela,
+  ].filter(Boolean);
+
+  elementos.forEach((elemento) => {
+    elemento.style.visibility = ocultar ? "hidden" : "";
+  });
+}
+
+function desenharPdfNativo(pdf, layout, subtotal) {
+  const margemPdf = 8;
+  const larguraPagina = pdf.internal.pageSize.getWidth();
+  const larguraConteudo = larguraPagina - margemPdf * 2;
+  const escala = larguraConteudo / layout.containerWidth;
+  const pxParaMm = (valor) => valor * escala;
+  const ponto = (retangulo) => ({
+    x: margemPdf + pxParaMm(retangulo.left),
+    y: margemPdf + pxParaMm(retangulo.top),
+    width: pxParaMm(retangulo.width),
+    height: pxParaMm(retangulo.height),
+  });
+  const tamanhoFontePt = (pixels) => pixels * 0.75;
+  const linhaBase = (retangulo, tamanhoFontePx) =>
+    retangulo.y + retangulo.height / 2 + tamanhoFontePt(tamanhoFontePx) * 0.35;
+
+  const desenharTexto = (texto, retangulo, tamanhoFontePx, cor, alinhamento = "center", deslocamentoPx = 0) => {
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(tamanhoFontePt(tamanhoFontePx));
+    pdf.setTextColor(...cor);
+    const deslocamento = pxParaMm(deslocamentoPx);
+    const x = alinhamento === "left"
+      ? retangulo.x + deslocamento
+      : alinhamento === "right"
+        ? retangulo.x + retangulo.width - deslocamento
+        : retangulo.x + retangulo.width / 2;
+    pdf.text(
+      texto,
+      x,
+      linhaBase(retangulo, tamanhoFontePx),
+      { align: alinhamento },
+    );
+  };
+
+  if (layout.badgeProposta) {
+    const badge = ponto(layout.badgeProposta);
+    pdf.setFillColor(30, 27, 75);
+    pdf.roundedRect(badge.x, badge.y, badge.width, badge.height, 1.2, 1.2, "F");
+    desenharTexto("PROPOSTA COMERCIAL", badge, 9, [255, 255, 255]);
+  }
+
+  if (layout.logo) {
+    const logo = ponto(layout.logo);
+    pdf.setFillColor(30, 27, 75);
+    pdf.roundedRect(logo.x, logo.y, logo.width, logo.height, 1.5, 1.5, "F");
+
+    const tamanhoFontePx = 11;
+    const tamanhoFonte = tamanhoFontePt(tamanhoFontePx);
+    const partesLogo = [
+      { texto: "Use", cor: [255, 255, 255] },
+      { texto: "OrçaFácil", cor: [16, 185, 129] },
+      { texto: "App", cor: [255, 255, 255] },
+    ];
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(tamanhoFonte);
+    const larguras = partesLogo.map(({ texto }) => pdf.getTextWidth(texto));
+    let xAtual = logo.x + (logo.width - larguras.reduce((total, largura) => total + largura, 0)) / 2;
+    const yTexto = linhaBase(logo, tamanhoFontePx);
+
+    partesLogo.forEach(({ texto, cor }, index) => {
+      pdf.setTextColor(...cor);
+      pdf.text(texto, xAtual, yTexto);
+      xAtual += larguras[index];
+    });
+  }
+
+  layout.cabecalhoTabela.forEach((retangulo, index) => {
+    if (!retangulo) return;
+    const celula = ponto(retangulo);
+    const elemento = layout.elementos.cabecalhoTabela[index];
+    pdf.setFillColor(30, 27, 75);
+    pdf.rect(celula.x, celula.y, celula.width, celula.height, "F");
+    desenharTexto(
+      elemento.textContent.trim(),
+      celula,
+      9,
+      [255, 255, 255],
+      elemento.getAttribute("align") || "left",
+      elemento.getAttribute("align") === "center" ? 0 : 12,
+    );
+  });
+
+  if (layout.total) {
+    const total = ponto(layout.total);
+    pdf.setFillColor(30, 27, 75);
+    pdf.roundedRect(total.x, total.y, total.width, total.height, 1.5, 1.5, "F");
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(tamanhoFontePt(9));
+    pdf.setTextColor(147, 197, 253);
+    pdf.text("VALOR TOTAL", total.x + total.width - pxParaMm(18), total.y + pxParaMm(12), {
+      align: "right",
+    });
+    pdf.setFontSize(tamanhoFontePt(22));
+    pdf.setTextColor(16, 185, 129);
+    pdf.text(formatarMoeda(subtotal), total.x + total.width - pxParaMm(18), total.y + pxParaMm(12 + 9), {
+      align: "right",
+    });
+  }
 }
 
 // --- Manipulação dos Itens ---
@@ -1173,7 +1333,7 @@ async function gerarPDF() {
       <!-- LADO ESQUERDO: TÍTULO E DATA -->
       <td style="vertical-align: top; text-align: left;">
         <div style="margin-bottom: 6px;">
-          <span style="background-color: #1e1b4b; color: #ffffff; font-size: 9px; line-height: 11px; font-weight: 800; text-transform: uppercase; padding: 4px 8px; border-radius: 4px; display: inline-block;">
+          <span data-native-pdf="proposal-badge" style="background-color: #1e1b4b; color: #ffffff; font-size: 9px; line-height: 11px; font-weight: 800; text-transform: uppercase; padding: 4px 8px; border-radius: 4px; display: inline-block;">
             PROPOSTA COMERCIAL
           </span>
         </div>
@@ -1187,7 +1347,7 @@ async function gerarPDF() {
 
       <!-- LADO DIREITO: LOGO E SUBTÍTULO -->
       <td style="vertical-align: top; text-align: right;">
-        <div style="background-color: #1e1b4b; border-radius: 6px; padding: 8px 12px; display: inline-block;">
+        <div data-native-pdf="logo" style="background-color: #1e1b4b; border-radius: 6px; padding: 8px 12px; display: inline-block;">
           <span style="font-size: 11px; line-height: 12px; font-weight: 900; color: #ffffff !important; display: block; margin-top: 1px;">
             <span style="color: #ffffff !important;">Use</span><span style="color: #10b981 !important;">OrçaFácil</span><span style="color: #ffffff !important;">App</span>
           </span>
@@ -1241,10 +1401,10 @@ async function gerarPDF() {
     <table width="100%" border="0" cellspacing="0" cellpadding="8" style="border-collapse: collapse; font-size: 11px;">
       <thead>
         <tr style="background-color: #1e1b4b; color: #ffffff; font-size: 9px; text-transform: uppercase;">
-          <th align="left" style="padding: 8px 12px; vertical-align: middle; line-height: 11px;">Descrição</th>
-          <th align="center" width="50" style="padding: 8px 4px; vertical-align: middle; line-height: 11px;">Qtd.</th>
-          <th align="right" width="90" style="padding: 8px 8px; vertical-align: middle; line-height: 11px;">Preço Un.</th>
-          <th align="right" width="100" style="padding: 8px 12px; vertical-align: middle; line-height: 11px;">Subtotal</th>
+          <th data-native-pdf="table-header" align="left" style="padding: 8px 12px; vertical-align: middle; line-height: 11px;">Descrição</th>
+          <th data-native-pdf="table-header" align="center" width="50" style="padding: 8px 4px; vertical-align: middle; line-height: 11px;">Qtd.</th>
+          <th data-native-pdf="table-header" align="right" width="90" style="padding: 8px 8px; vertical-align: middle; line-height: 11px;">Preço Un.</th>
+          <th data-native-pdf="table-header" align="right" width="100" style="padding: 8px 12px; vertical-align: middle; line-height: 11px;">Subtotal</th>
         </tr>
       </thead>
       <tbody>
@@ -1283,7 +1443,7 @@ async function gerarPDF() {
 
   <!-- VALOR TOTAL (ALINHAMENTO CORRIGIDO) -->
   <div style="text-align: right; margin-bottom: 16px;">
-    <div style="background-color: #1e1b4b; border-radius: 6px; padding: 12px 18px; text-align: right; min-width: 220px; display: inline-block;">
+    <div data-native-pdf="total" style="background-color: #1e1b4b; border-radius: 6px; padding: 12px 18px; text-align: right; min-width: 220px; display: inline-block;">
       <span style="font-size: 9px; line-height: 11px; font-weight: 800; text-transform: uppercase; color: #93c5fd; display: block; margin-bottom: 2px;">
         VALOR TOTAL
       </span>
@@ -1322,6 +1482,7 @@ async function gerarPDF() {
     containerPdfPreviewEl.innerHTML = "";
     containerPdfPreviewEl.appendChild(container);
   }
+  containerPdfAtual = container;
 
   if (modalPreviewEl) {
     modalPreviewEl.classList.remove("hidden");
