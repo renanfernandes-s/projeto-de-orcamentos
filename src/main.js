@@ -1173,7 +1173,7 @@ async function gerarPDF() {
       <!-- LADO ESQUERDO: TÍTULO E DATA -->
       <td style="vertical-align: top; text-align: left;">
         <div style="margin-bottom: 6px;">
-          <span style="background-color: #1e1b4b; color: #ffffff; font-size: 9px; font-weight: 800; text-transform: uppercase; padding: 4px 8px; border-radius: 4px; display: inline-block;">
+          <span style="background-color: #1e1b4b; color: #ffffff; font-size: 9px; line-height: 11px; font-weight: 800; text-transform: uppercase; padding: 4px 8px; border-radius: 4px; display: inline-block;">
             PROPOSTA COMERCIAL
           </span>
         </div>
@@ -1188,7 +1188,7 @@ async function gerarPDF() {
       <!-- LADO DIREITO: LOGO E SUBTÍTULO -->
       <td style="vertical-align: top; text-align: right;">
         <div style="background-color: #1e1b4b; border-radius: 6px; padding: 8px 12px; display: inline-block;">
-          <span style="font-size: 11px; font-weight: 900; color: #ffffff !important; display: block; line-height: 1;">
+          <span style="font-size: 11px; line-height: 12px; font-weight: 900; color: #ffffff !important; display: block; margin-top: 1px;">
             <span style="color: #ffffff !important;">Use</span><span style="color: #10b981 !important;">OrçaFácil</span><span style="color: #ffffff !important;">App</span>
           </span>
         </div>
@@ -1241,10 +1241,10 @@ async function gerarPDF() {
     <table width="100%" border="0" cellspacing="0" cellpadding="8" style="border-collapse: collapse; font-size: 11px;">
       <thead>
         <tr style="background-color: #1e1b4b; color: #ffffff; font-size: 9px; text-transform: uppercase;">
-          <th align="left" style="padding: 8px 12px;">Descrição</th>
-          <th align="center" width="50" style="padding: 8px 4px;">Qtd.</th>
-          <th align="right" width="90" style="padding: 8px 8px;">Preço Un.</th>
-          <th align="right" width="100" style="padding: 8px 12px;">Subtotal</th>
+          <th align="left" style="padding: 8px 12px; vertical-align: middle; line-height: 11px;">Descrição</th>
+          <th align="center" width="50" style="padding: 8px 4px; vertical-align: middle; line-height: 11px;">Qtd.</th>
+          <th align="right" width="90" style="padding: 8px 8px; vertical-align: middle; line-height: 11px;">Preço Un.</th>
+          <th align="right" width="100" style="padding: 8px 12px; vertical-align: middle; line-height: 11px;">Subtotal</th>
         </tr>
       </thead>
       <tbody>
@@ -1282,12 +1282,12 @@ async function gerarPDF() {
     }
 
   <!-- VALOR TOTAL (ALINHAMENTO CORRIGIDO) -->
-  <div style="display: flex; justify-content: flex-end; margin-bottom: 16px;">
-    <div style="background-color: #1e1b4b; border-radius: 6px; padding: 12px 18px; text-align: right; min-width: 220px;">
-      <span style="font-size: 9px; font-weight: 800; text-transform: uppercase; color: #93c5fd; display: block; margin-bottom: 2px;">
+  <div style="text-align: right; margin-bottom: 16px;">
+    <div style="background-color: #1e1b4b; border-radius: 6px; padding: 12px 18px; text-align: right; min-width: 220px; display: inline-block;">
+      <span style="font-size: 9px; line-height: 11px; font-weight: 800; text-transform: uppercase; color: #93c5fd; display: block; margin-bottom: 2px;">
         VALOR TOTAL
       </span>
-      <span style="font-size: 22px; font-weight: 900; color: #10b981; display: block; line-height: 1;">
+      <span style="font-size: 22px; line-height: 24px; font-weight: 900; color: #10b981; display: block; margin-top: 1px;">
         ${formatarMoeda(subtotal)}
       </span>
     </div>
