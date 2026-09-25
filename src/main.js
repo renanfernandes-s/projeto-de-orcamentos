@@ -74,6 +74,17 @@ const containerPdfPreviewEl = document.getElementById("container-pdf-preview");
 const btnFecharPreviewEl = document.getElementById("btn-fechar-preview");
 const btnBaixarPreviewEl = document.getElementById("btn-baixar-preview");
 const btnCancelarPreviewEl = document.getElementById("btn-cancelar-preview");
+const modalFeedbackEl = document.getElementById("modal-feedback");
+const feedbackFormViewEl = document.getElementById("feedback-form-view");
+const feedbackSuccessViewEl = document.getElementById("feedback-success-view");
+const feedbackRatingEl = document.getElementById("feedback-rating");
+const feedbackCommentEl = document.getElementById("feedback-comment");
+const feedbackCommentHintEl = document.getElementById("feedback-comment-hint");
+const feedbackErrorEl = document.getElementById("feedback-error");
+const feedbackSuccessMessageEl = document.getElementById("feedback-success-message");
+const btnSubmitFeedbackEl = document.getElementById("btn-submit-feedback");
+const btnFeedbackLaterEl = document.getElementById("btn-feedback-later");
+const btnCloseFeedbackEl = document.getElementById("btn-close-feedback");
 const modalResetPasswordEl = document.getElementById("modal-reset-password");
 const resetPasswordFormEl = document.getElementById("reset-password-form");
 const resetPasswordInputEl = document.getElementById("reset-password");
@@ -105,6 +116,7 @@ const statusAguardandoCartaoEl = document.getElementById(
 
 // Botões de Voltar para a Oferta
 const btnsVoltarOferta = document.querySelectorAll(".btn-voltar-oferta");
+let feedbackRating = 0;
 
 // --- Função Helper de Validação de CPF/CNPJ ---
 // ✅ CORREÇÃO DA VALIDAÇÃO MATEMÁTICA REAL DE CPF/CNPJ
@@ -326,6 +338,7 @@ async function baixarPreview() {
     btnEnviarWhatsEl?.classList.add("flex");
     fecharPreview();
     btnGerarPdfEl.textContent = "✓ PDF BAIXADO (Gerar Novamente)";
+    if (!isProUser && userPdfCount === 1) abrirModalFeedback();
   } catch (err) {
     console.error("Erro ao baixar PDF:", err);
     alert("Ocorreu um erro ao baixar o PDF.");
@@ -338,6 +351,119 @@ async function baixarPreview() {
 btnFecharPreviewEl?.addEventListener("click", fecharPreview);
 btnCancelarPreviewEl?.addEventListener("click", fecharPreview);
 btnBaixarPreviewEl?.addEventListener("click", baixarPreview);
+
+function atualizarEstrelasFeedback() {
+  feedbackRatingEl?.querySelectorAll(".feedback-star").forEach((button) => {
+    const ativo = Number(button.dataset.rating) <= feedbackRating;
+    button.classList.toggle("text-amber-400", ativo);
+    button.classList.toggle("text-slate-300", !ativo);
+    button.setAttribute("aria-checked", String(Number(button.dataset.rating) === feedbackRating));
+  });
+}
+
+function abrirModalFeedback() {
+  if (!modalFeedbackEl) return;
+  feedbackRating = 0;
+  if (feedbackCommentEl) feedbackCommentEl.value = "";
+  feedbackErrorEl?.classList.add("hidden");
+  feedbackFormViewEl?.classList.remove("hidden");
+  feedbackSuccessViewEl?.classList.add("hidden");
+  atualizarEstrelasFeedback();
+  modalFeedbackEl.classList.remove("hidden");
+  modalFeedbackEl.classList.add("flex");
+}
+
+function fecharModalFeedback() {
+  modalFeedbackEl?.classList.add("hidden");
+  modalFeedbackEl?.classList.remove("flex");
+}
+
+function mostrarErroFeedback(mensagem) {
+  if (!feedbackErrorEl) return;
+  feedbackErrorEl.textContent = mensagem;
+  feedbackErrorEl.classList.remove("hidden");
+}
+
+async function enviarFeedback() {
+  if (!feedbackRating) {
+    mostrarErroFeedback("Escolha uma nota de 1 a 5 estrelas.");
+    return;
+  }
+
+  const comentario = feedbackCommentEl?.value.trim() || "";
+  if (feedbackRating <= 3 && comentario.length < 3) {
+    mostrarErroFeedback("Conte um pouco mais para podermos analisar seu feedback.");
+    feedbackCommentEl?.focus();
+    return;
+  }
+
+  const reviewUrl = import.meta.env.VITE_GOOGLE_REVIEW_URL;
+  const janelaGoogle = feedbackRating >= 4 && reviewUrl
+    ? window.open("about:blank", "_blank", "noopener,noreferrer")
+    : null;
+
+  btnSubmitFeedbackEl.disabled = true;
+  btnSubmitFeedbackEl.textContent = "Enviando...";
+  feedbackErrorEl?.classList.add("hidden");
+
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error("Sua sessão expirou. Faça login novamente.");
+
+    const response = await fetch("/api/enviar-feedback", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({
+        rating: feedbackRating,
+        comment: comentario,
+        googleRedirected: feedbackRating >= 4,
+      }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Não foi possível registrar sua avaliação.");
+
+    if (janelaGoogle) janelaGoogle.location.href = reviewUrl;
+    if (feedbackRating >= 4) {
+      if (feedbackSuccessMessageEl) {
+        feedbackSuccessMessageEl.textContent = "Obrigado! Você será encaminhado para compartilhar sua avaliação no Google.";
+      }
+    } else if (feedbackSuccessMessageEl) {
+      feedbackSuccessMessageEl.textContent = data.emailSent
+        ? "Obrigado por nos contar. Nossa equipe recebeu sua mensagem e vai analisar o que aconteceu."
+        : "Obrigado por nos contar. Sua mensagem foi registrada. Abra seu aplicativo de e-mail para enviá-la à nossa equipe.";
+      if (!data.emailSent) {
+        const assunto = encodeURIComponent("Feedback sobre o OrçaFácilApp");
+        const corpo = encodeURIComponent(`Nota: ${feedbackRating}/5\n\n${comentario}`);
+        window.location.href = `mailto:useorcafacilapp@gmail.com?subject=${assunto}&body=${corpo}`;
+      }
+    }
+
+    feedbackFormViewEl?.classList.add("hidden");
+    feedbackSuccessViewEl?.classList.remove("hidden");
+  } catch (error) {
+    janelaGoogle?.close();
+    mostrarErroFeedback(error.message || "Não foi possível registrar sua avaliação.");
+  } finally {
+    btnSubmitFeedbackEl.disabled = false;
+    btnSubmitFeedbackEl.textContent = "Enviar avaliação";
+  }
+}
+
+feedbackRatingEl?.addEventListener("click", (event) => {
+  const button = event.target.closest(".feedback-star");
+  if (!button) return;
+  feedbackRating = Number(button.dataset.rating);
+  if (feedbackCommentHintEl) {
+    feedbackCommentHintEl.textContent = feedbackRating <= 3 ? "(obrigatório)" : "(opcional)";
+  }
+  atualizarEstrelasFeedback();
+});
+btnSubmitFeedbackEl?.addEventListener("click", enviarFeedback);
+btnFeedbackLaterEl?.addEventListener("click", fecharModalFeedback);
+btnCloseFeedbackEl?.addEventListener("click", fecharModalFeedback);
 
 // --- Formatação Monetária e Helpers ---
 const formatarMoeda = (valor) => {

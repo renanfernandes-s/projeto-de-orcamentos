@@ -425,6 +425,69 @@
       </div>
     </div>
 
+    <!-- Modal de Avaliação após o primeiro PDF gratuito -->
+    <div id="modal-feedback"
+      class="fixed inset-0 z-[60] hidden items-center justify-center bg-indigo-950/70 p-4 backdrop-blur-sm">
+      <div class="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
+        <div id="feedback-form-view">
+          <p class="mb-1 text-xs font-black uppercase tracking-wider text-emerald-600">Seu primeiro PDF está pronto</p>
+          <h2 class="mb-2 text-lg font-black text-indigo-950">Como foi sua experiência?</h2>
+          <p class="mb-5 text-sm leading-relaxed text-slate-600">Sua opinião ajuda a melhorar o OrçaFácilApp.</p>
+
+          <div id="feedback-rating" class="mb-4 flex justify-center gap-1" role="radiogroup"
+            aria-label="Nota da experiência">
+            <button type="button" data-rating="1"
+              class="feedback-star text-3xl text-slate-300 transition hover:text-amber-400" aria-label="1 estrela"
+              aria-checked="false" role="radio">★</button>
+            <button type="button" data-rating="2"
+              class="feedback-star text-3xl text-slate-300 transition hover:text-amber-400" aria-label="2 estrelas"
+              aria-checked="false" role="radio">★</button>
+            <button type="button" data-rating="3"
+              class="feedback-star text-3xl text-slate-300 transition hover:text-amber-400" aria-label="3 estrelas"
+              aria-checked="false" role="radio">★</button>
+            <button type="button" data-rating="4"
+              class="feedback-star text-3xl text-slate-300 transition hover:text-amber-400" aria-label="4 estrelas"
+              aria-checked="false" role="radio">★</button>
+            <button type="button" data-rating="5"
+              class="feedback-star text-3xl text-slate-300 transition hover:text-amber-400" aria-label="5 estrelas"
+              aria-checked="false" role="radio">★</button>
+          </div>
+
+          <label for="feedback-comment"
+            class="mb-1 block text-[11px] font-bold uppercase tracking-wider text-slate-500">
+            Comentário <span id="feedback-comment-hint" class="font-normal normal-case">(opcional)</span>
+          </label>
+          <textarea id="feedback-comment" rows="4" maxlength="2000"
+            class="mb-2 w-full resize-none rounded-lg border border-slate-300 p-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
+            placeholder="Conte o que podemos melhorar"></textarea>
+          <p id="feedback-error" class="mb-3 hidden text-xs text-red-600" role="alert"></p>
+
+          <div class="flex gap-2">
+            <button id="btn-feedback-later" type="button"
+              class="flex-1 rounded-lg border border-slate-300 px-3 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50">
+              Agora não
+            </button>
+            <button id="btn-submit-feedback" type="button"
+              class="flex-1 rounded-lg bg-indigo-950 px-3 py-3 text-sm font-bold text-white hover:bg-indigo-900 disabled:cursor-not-allowed disabled:opacity-60">
+              Enviar avaliação
+            </button>
+          </div>
+        </div>
+
+        <div id="feedback-success-view" class="hidden text-center">
+          <div
+            class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-2xl text-emerald-600">
+            ✓</div>
+          <h2 id="feedback-success-title" class="mb-2 text-lg font-black text-indigo-950">Obrigado pelo feedback!</h2>
+          <p id="feedback-success-message" class="mb-5 text-sm leading-relaxed text-slate-600"></p>
+          <button id="btn-close-feedback" type="button"
+            class="w-full rounded-lg bg-indigo-950 px-3 py-3 text-sm font-bold text-white hover:bg-indigo-900">
+            Fechar
+          </button>
+        </div>
+      </div>
+    </div>
+
     <script type="module" src="/src/main.js"></script>
 </body>
 

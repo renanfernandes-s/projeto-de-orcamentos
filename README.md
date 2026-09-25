@@ -117,6 +117,7 @@ Este projeto depende de variáveis de ambiente para autenticação e pagamentos.
 - Supabase
 - Asaas
 - Webhook do Asaas
+- Notificação de feedback (Resend)
 
 O arquivo `.env` não deve ser versionado.
 
@@ -127,9 +128,13 @@ VITE_SUPABASE_URL="https://xxxxx.supabase.co"
 VITE_SUPABASE_ANON_KEY="xxxxx"
 ASAAS_API_KEY="xxxxx"
 ASAAS_WEBHOOK_TOKEN="xxxxx"
+RESEND_API_KEY="re_xxxxx"
+RESEND_FROM_EMAIL="OrçaFácilApp <notificacoes@seu-dominio-verificado.com>"
 ```
 
 Os nomes exatos podem variar conforme a implementação do projeto e o ambiente em que for publicado.
+
+O link público de avaliações usa `VITE_GOOGLE_REVIEW_URL`. Para avaliações de 1 a 3 estrelas, o feedback é salvo na tabela privada `feedbacks`. Quando `RESEND_API_KEY` e `RESEND_FROM_EMAIL` estão configuradas na Vercel, uma notificação é enviada para `useorcafacilapp@gmail.com`; sem essas variáveis, o app abre um e-mail pré-preenchido como fallback.
 
 ---
 
@@ -145,6 +150,7 @@ Migrations relevantes no projeto:
 - `supabase/migrations/202609140001_payment_safety.sql`
 - `supabase/migrations/202609150001_professional_document.sql`
 - `supabase/migrations/202609160001_manual_subscription.sql`
+- `supabase/migrations/202609250001_feedback.sql`
 
 ---
 
