@@ -399,8 +399,9 @@ async function enviarFeedback() {
 
   const reviewUrl = import.meta.env.VITE_GOOGLE_REVIEW_URL;
   const janelaGoogle = feedbackRating >= 4 && reviewUrl
-    ? window.open("about:blank", "_blank", "noopener,noreferrer")
+    ? window.open("about:blank", "_blank")
     : null;
+  if (janelaGoogle) janelaGoogle.opener = null;
 
   btnSubmitFeedbackEl.disabled = true;
   btnSubmitFeedbackEl.textContent = "Enviando...";
@@ -425,7 +426,13 @@ async function enviarFeedback() {
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || "Não foi possível registrar sua avaliação.");
 
-    if (janelaGoogle) janelaGoogle.location.href = reviewUrl;
+    if (feedbackRating >= 4) {
+      if (janelaGoogle) {
+        janelaGoogle.location.href = reviewUrl;
+      } else if (reviewUrl) {
+        window.location.assign(reviewUrl);
+      }
+    }
     if (feedbackRating >= 4) {
       if (feedbackSuccessMessageEl) {
         feedbackSuccessMessageEl.textContent = "Obrigado! Você será encaminhado para compartilhar sua avaliação no Google.";
