@@ -17,7 +17,7 @@
 <body class="bg-slate-100 font-sans text-slate-800 antialiased min-h-screen pb-12">
 
   <!-- Topbar / Cabeçalho Limpo -->
-  <header class="bg-indigo-950 text-white px-4 py-3 shadow-md sticky top-0 z-40">
+  <header class="bg-brand text-white px-4 py-3 shadow-md sticky top-0 z-40">
     <div class="max-w-md mx-auto flex items-center justify-between">
       <div class="flex items-center gap-1.5">
         <span class="font-black text-lg tracking-tight">Use <span class="text-emerald-400">OrçaFácil</span><span
@@ -32,7 +32,7 @@
             Conhecer o App
             <!-- Exibido quando DESLOGADO -->
             <a href="/login.html" id="btn-go-login"
-              class="text-xs font-bold text-indigo-950 bg-white hover:bg-slate-100 px-3 py-1.5 rounded-lg shadow-sm transition">
+              class="text-xs font-bold text-brand bg-white hover:bg-slate-100 px-3 py-1.5 rounded-lg shadow-sm transition">
               Entrar
             </a>
 
@@ -182,7 +182,7 @@
     <!-- Botões de Ação Separados -->
     <div class="space-y-2">
       <button id="btn-gerar-pdf" type="button"
-        class="w-full py-3.5 bg-indigo-950 hover:bg-indigo-900 text-white font-bold rounded-xl shadow-md text-sm uppercase tracking-wide transition flex items-center justify-center gap-2">
+        class="w-full py-3.5 bg-brand hover:bg-brand-hover text-white font-bold rounded-xl shadow-md text-sm uppercase tracking-wide transition flex items-center justify-center gap-2">
         <span>📄 1. Pré-Visualizar PDF</span>
       </button>
 
@@ -194,9 +194,9 @@
 
     <!-- Modal de Redefinição de Senha -->
     <div id="modal-reset-password"
-      class="fixed inset-0 bg-indigo-950/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+      class="fixed inset-0 bg-brand/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
       <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-100">
-        <h2 class="text-lg font-black text-indigo-950 mb-2">Criar nova senha</h2>
+        <h2 class="text-lg font-black text-brand mb-2">Criar nova senha</h2>
         <p class="text-xs text-slate-500 leading-relaxed mb-4">
           Escolha uma senha com pelo menos 10 caracteres para proteger sua conta.
         </p>
@@ -225,7 +225,7 @@
           <p id="reset-password-error" class="hidden text-xs text-red-600" role="alert"></p>
 
           <button id="btn-reset-password" type="submit"
-            class="w-full py-3 bg-indigo-950 hover:bg-indigo-900 text-white font-bold rounded-xl shadow-md text-sm transition">
+            class="w-full py-3 bg-brand hover:bg-brand-hover text-white font-bold rounded-xl shadow-md text-sm transition">
             Atualizar senha
           </button>
         </form>
@@ -233,8 +233,7 @@
     </div>
 
     <!-- Modal de Upgrade PRO & Pagamento Asaas -->
-    <div id="modal-pro"
-      class="fixed inset-0 bg-indigo-950/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div id="modal-pro" class="fixed inset-0 bg-brand/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
       <div
         class="bg-white rounded-2xl max-w-sm w-full p-6 text-center shadow-2xl border border-slate-100 animate-in fade-in zoom-in duration-200">
 
@@ -244,11 +243,11 @@
             class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl mx-auto flex items-center justify-center text-2xl mb-4 font-black">
             ⚡
           </div>
-          <h3 class="text-lg font-black text-indigo-950 tracking-tight mb-2">
+          <h3 class="text-lg font-black text-brand tracking-tight mb-2">
             Você atingiu o limite gratuito!
           </h3>
           <p class="text-xs text-slate-600 leading-relaxed mb-4">
-            Parabéns por aproveitar o <span class="font-bold text-indigo-950">UseOrçaFácilApp</span>! Para continuar
+            Parabéns por aproveitar o <span class="font-bold text-brand">UseOrçaFácilApp</span>! Para continuar
             fechando negócios e emitir <span class="font-bold text-emerald-600">orçamentos ilimitados</span>
             com a sua marca, garanta acesso completo agora mesmo.
           </p>
@@ -291,7 +290,7 @@
             class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-2xl mx-auto flex items-center justify-center text-xl mb-3 font-black">
             📱
           </div>
-          <h3 class="text-base font-black text-indigo-950 tracking-tight mb-1">
+          <h3 class="text-base font-black text-brand tracking-tight mb-1">
             Pague com Pix para ativar
           </h3>
           <p class="text-[11px] text-slate-500 mb-4">
@@ -305,7 +304,7 @@
               class="w-36 h-36 bg-white p-2 rounded-lg shadow-inner flex items-center justify-center border border-slate-200 mb-2">
               <!-- A imagem gerada pelo Asaas entra aqui automaticamente -->
             </div>
-            <span class="text-xs font-black text-indigo-950">Valor: R$ 14,90</span>
+            <span class="text-xs font-black text-brand">Valor: R$ 14,90</span>
           </div>
 
           <!-- Botão Copia e Cola -->
@@ -336,7 +335,7 @@
             class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-2xl mx-auto flex items-center justify-center text-xl mb-3 font-black">
             💳
           </div>
-          <h3 class="text-base font-black text-indigo-950 tracking-tight mb-1">
+          <h3 class="text-base font-black text-brand tracking-tight mb-1">
             Pagamento via Cartão
           </h3>
           <p class="text-[11px] text-slate-500 mb-4">
@@ -375,7 +374,7 @@
             class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full mx-auto flex items-center justify-center text-3xl mb-4 font-black animate-bounce">
             ✓
           </div>
-          <h3 class="text-lg font-black text-indigo-950 tracking-tight mb-2">
+          <h3 class="text-lg font-black text-brand tracking-tight mb-2">
             Assinatura Ativada com Sucesso! 🎉
           </h3>
           <p class="text-xs text-slate-600 leading-relaxed mb-6">
@@ -383,7 +382,7 @@
             orçamentos precisar de forma totalmente ilimitada.
           </p>
           <button id="btn-concluir-pro" type="button"
-            class="w-full py-3 bg-indigo-950 hover:bg-indigo-900 text-white font-black rounded-xl text-xs uppercase tracking-wider shadow-lg transition">
+            class="w-full py-3 bg-brand hover:bg-brand-hover text-white font-black rounded-xl text-xs uppercase tracking-wider shadow-lg transition">
             Começar a Usar Agora 🚀
           </button>
         </div>
@@ -392,7 +391,7 @@
     </div>
 
     <!-- Modal de Pré-visualização do PDF -->
-    <div id="modal-preview" class="fixed inset-0 z-50 hidden items-center justify-center bg-indigo-950/80 p-4">
+    <div id="modal-preview" class="fixed inset-0 z-50 hidden items-center justify-center bg-brand/80 p-4">
       <div class="flex h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl">
         <div class="flex items-center justify-between border-b border-slate-200 p-4">
           <h2 class="text-lg font-bold text-slate-800">Pré-visualização do orçamento</h2>
@@ -413,7 +412,7 @@
 
         <div class="flex gap-2 border-t border-slate-200 p-4">
           <button id="btn-baixar-preview" type="button"
-            class="flex-1 rounded-lg bg-indigo-950 px-4 py-3 text-sm font-bold text-white hover:bg-indigo-900">
+            class="flex-1 rounded-lg bg-brand px-4 py-3 text-sm font-bold text-white hover:bg-brand-hover">
             Baixar PDF
           </button>
 
@@ -427,11 +426,11 @@
 
     <!-- Modal de Avaliação após o primeiro PDF gratuito -->
     <div id="modal-feedback"
-      class="fixed inset-0 z-[60] hidden items-center justify-center bg-indigo-950/70 p-4 backdrop-blur-sm">
+      class="fixed inset-0 z-[60] hidden items-center justify-center bg-brand/70 p-4 backdrop-blur-sm">
       <div class="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
         <div id="feedback-form-view">
           <p class="mb-1 text-xs font-black uppercase tracking-wider text-emerald-600">Seu primeiro PDF está pronto</p>
-          <h2 class="mb-2 text-lg font-black text-indigo-950">Como foi sua experiência?</h2>
+          <h2 class="mb-2 text-lg font-black text-brand">Como foi sua experiência?</h2>
           <p class="mb-5 text-sm leading-relaxed text-slate-600">Sua opinião ajuda a melhorar o OrçaFácilApp.</p>
 
           <div id="feedback-rating" class="mb-4 flex justify-center gap-1" role="radiogroup"
@@ -468,7 +467,7 @@
               Agora não
             </button>
             <button id="btn-submit-feedback" type="button"
-              class="flex-1 rounded-lg bg-indigo-950 px-3 py-3 text-sm font-bold text-white hover:bg-indigo-900 disabled:cursor-not-allowed disabled:opacity-60">
+              class="flex-1 rounded-lg bg-brand px-3 py-3 text-sm font-bold text-white hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60">
               Enviar avaliação
             </button>
           </div>
@@ -478,10 +477,10 @@
           <div
             class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-2xl text-emerald-600">
             ✓</div>
-          <h2 id="feedback-success-title" class="mb-2 text-lg font-black text-indigo-950">Obrigado pelo feedback!</h2>
+          <h2 id="feedback-success-title" class="mb-2 text-lg font-black text-brand">Obrigado pelo feedback!</h2>
           <p id="feedback-success-message" class="mb-5 text-sm leading-relaxed text-slate-600"></p>
           <button id="btn-close-feedback" type="button"
-            class="w-full rounded-lg bg-indigo-950 px-3 py-3 text-sm font-bold text-white hover:bg-indigo-900">
+            class="w-full rounded-lg bg-brand px-3 py-3 text-sm font-bold text-white hover:bg-brand-hover">
             Fechar
           </button>
         </div>

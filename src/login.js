@@ -98,9 +98,9 @@ function alternarModo(modo) {
     tabSignup.setAttribute('aria-selected', String(cadastroAtivo));
     tabLogin.className = cadastroAtivo
         ? 'rounded-md px-3 py-2 text-xs font-bold text-slate-500 transition'
-        : 'rounded-md bg-white px-3 py-2 text-xs font-bold text-indigo-950 shadow-sm transition';
+        : 'rounded-md bg-white px-3 py-2 text-xs font-bold text-brand shadow-sm transition';
     tabSignup.className = cadastroAtivo
-        ? 'rounded-md bg-white px-3 py-2 text-xs font-bold text-indigo-950 shadow-sm transition'
+        ? 'rounded-md bg-white px-3 py-2 text-xs font-bold text-brand shadow-sm transition'
         : 'rounded-md px-3 py-2 text-xs font-bold text-slate-500 transition';
     passwordLabel.textContent = cadastroAtivo ? 'Nova senha' : 'Senha';
     passwordInput.placeholder = cadastroAtivo ? 'Mínimo de 10 caracteres' : '••••••••';
