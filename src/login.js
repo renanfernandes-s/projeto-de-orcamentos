@@ -10,6 +10,7 @@ const passwordConfirmationInput = document.getElementById('auth-password-confirm
 const passwordConfirmationGroup = document.getElementById('password-confirmation-group');
 const passwordLabel = document.getElementById('password-label');
 const btnLogin = document.getElementById('btn-login');
+const btnGoogle = document.getElementById('btn-google');
 const btnRecovery = document.getElementById('btn-recovery');
 const tabLogin = document.getElementById('tab-login');
 const tabSignup = document.getElementById('tab-signup');
@@ -112,6 +113,28 @@ function alternarModo(modo) {
 
 tabLogin.addEventListener('click', () => alternarModo('login'));
 tabSignup.addEventListener('click', () => alternarModo('signup'));
+
+btnGoogle.addEventListener('click', async () => {
+    btnGoogle.disabled = true;
+    btnGoogle.setAttribute('aria-busy', 'true');
+
+    try {
+        const { error } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: { redirectTo: `${window.location.origin}/` },
+        });
+
+        if (error) {
+            alert('Não foi possível iniciar o login com Google. Tente novamente.');
+            btnGoogle.disabled = false;
+            btnGoogle.removeAttribute('aria-busy');
+        }
+    } catch {
+        alert('Não foi possível iniciar o login com Google. Tente novamente mais tarde.');
+        btnGoogle.disabled = false;
+        btnGoogle.removeAttribute('aria-busy');
+    }
+});
 
 // Ações de login e cadastro
 form.addEventListener('submit', async (e) => {
